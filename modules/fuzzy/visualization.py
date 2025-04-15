@@ -197,12 +197,15 @@ def plot_memberships(cache_path="cache/membresias_plot.pkl"):
     fig.show()
 
 
-def plot_interactive_3d_surface():
+def plot_interactive_3d_surface(cache_dir="cache/cache_3d_surface"):
     """
     Display a 3D surface plot of congestion level as a function of vehicles and speed.
 
     Allows interactive control of the density input to explore the fuzzy output
-    over the (vehicles, speed) space. Uses a dense grid to compute the surface.
+    over the (vehicles, speed) space. Results are cached per density level.
+
+    Args:
+        cache_dir (str): Directory where the surface plots are cached.
 
     Returns:
         None
@@ -222,6 +225,18 @@ def plot_interactive_3d_surface():
 
     @widgets.interact(density=den_slider)
     def update(density):
+        # Generate unique cache file path based on density
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, f"surface_density_{int(density)}.pkl")
+
+        if os.path.exists(cache_path):
+            # Load from cache
+            fig = joblib.load(cache_path)
+            print(f"Loaded surface from cache (density={density:.0f})")
+            fig.show()
+            return
+
+        # Compute new surface
         V, Spd = np.meshgrid(vehicles, speed)
         Cong = np.zeros_like(V)
 
@@ -272,5 +287,9 @@ def plot_interactive_3d_surface():
             ),
             margin=dict(l=50, r=50, b=50, t=50),
         )
+
+        # Save to cache
+        joblib.dump(fig, cache_path)
+        print(f"Saved surface to cache (density={density:.0f})")
 
         fig.show()
