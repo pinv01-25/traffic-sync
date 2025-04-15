@@ -3,7 +3,7 @@ Visualization tools for the fuzzy traffic congestion system.
 
 This module provides plotting utilities to display:
 - Membership functions for all fuzzy variables.
-- A 3D surface of the fuzzy output with interactive widgets.
+- A 3D surface of the fuzzy output.
 
 Functions:
     - plot_memberships
@@ -16,7 +16,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import joblib
 import os
-import ipywidgets as widgets
 from modules.fuzzy.system import (
     density_range,
     vehicle_range,
@@ -24,8 +23,12 @@ from modules.fuzzy.system import (
     simulator,
 )
 
+# --------------------------------------------------
+# Plot membership functions
+# --------------------------------------------------
 
-def plot_memberships(cache_path="cache/membresias_plot.pkl"):
+
+def plot_memberships(cache_path="cache/membership_plot.pkl"):
     """
     Plot membership functions for fuzzy system inputs and output.
 
@@ -197,99 +200,95 @@ def plot_memberships(cache_path="cache/membresias_plot.pkl"):
     fig.show()
 
 
-def plot_interactive_3d_surface(cache_dir="cache/cache_3d_surface"):
+# --------------------------------------------------
+# Interactive 3D surface plot
+# --------------------------------------------------
+
+
+def plot_interactive_3d_surface(density=100, cache_dir="cache/3d_surface"):
     """
     Display a 3D surface plot of congestion level as a function of vehicles and speed.
 
-    Allows interactive control of the density input to explore the fuzzy output
-    over the (vehicles, speed) space. Results are cached per density level.
+    The density value is passed as a parameter. The result is cached to avoid recomputation.
 
     Args:
+        density (int or float): Density value in vehicles/km for which to compute the surface.
         cache_dir (str): Directory where the surface plots are cached.
 
     Returns:
         None
+
+    Raises:
+        ValueError: If the provided density is outside the allowed density_range.
     """
+    if density < np.min(density_range) or density > np.max(density_range):
+        raise ValueError(
+            f"Density {density} is out of bounds. Must be within {np.min(density_range)} and {np.max(density_range)}."
+        )
+
     res = 30
     vehicles = np.linspace(0, 50, res)
     speed = np.linspace(0, 60, res)
 
-    den_slider = widgets.FloatSlider(
-        value=100,
-        min=0,
-        max=150,
-        step=10,
-        description="Density:",
-        continuous_update=False,
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, f"density_{int(density)}.pkl")
+
+    if os.path.exists(cache_path):
+        fig = joblib.load(cache_path)
+        print(f"Loaded surface from cache (density={density:.0f})")
+        fig.show()
+        return
+
+    V, Spd = np.meshgrid(vehicles, speed)
+    Cong = np.zeros_like(V)
+
+    for i in range(res):
+        for j in range(res):
+            simulator.input["vehicles"] = V[i, j]
+            simulator.input["speed"] = Spd[i, j]
+            simulator.input["density"] = density
+            simulator.compute()
+            Cong[i, j] = simulator.output["congestion"]
+
+    fig = go.Figure(
+        data=[
+            go.Surface(
+                z=Cong,
+                x=V,
+                y=Spd,
+                colorscale="Viridis",
+                hovertemplate=(
+                    "<b>Vehicles:</b> %{x:.0f}/min<br>"
+                    "<b>Speed:</b> %{y:.0f} km/h<br>"
+                    "<b>Congestion:</b> %{z:.2f}<extra></extra>"
+                ),
+            )
+        ]
     )
 
-    @widgets.interact(density=den_slider)
-    def update(density):
-        # Generate unique cache file path based on density
-        os.makedirs(cache_dir, exist_ok=True)
-        cache_path = os.path.join(cache_dir, f"surface_density_{int(density)}.pkl")
-
-        if os.path.exists(cache_path):
-            # Load from cache
-            fig = joblib.load(cache_path)
-            print(f"Loaded surface from cache (density={density:.0f})")
-            fig.show()
-            return
-
-        # Compute new surface
-        V, Spd = np.meshgrid(vehicles, speed)
-        Cong = np.zeros_like(V)
-
-        for i in range(res):
-            for j in range(res):
-                simulator.input["vehicles"] = V[i, j]
-                simulator.input["speed"] = Spd[i, j]
-                simulator.input["density"] = density
-                simulator.compute()
-                Cong[i, j] = simulator.output["congestion"]
-
-        fig = go.Figure(
-            data=[
-                go.Surface(
-                    z=Cong,
-                    x=V,
-                    y=Spd,
-                    colorscale="Viridis",
-                    hovertemplate=(
-                        "<b>Vehicles:</b> %{x:.0f}/min<br>"
-                        "<b>Speed:</b> %{y:.0f} km/h<br>"
-                        "<b>Congestion:</b> %{z:.2f}<extra></extra>"
-                    ),
-                )
-            ]
-        )
-
-        # Configuración de ejes
-        fig.update_layout(
-            title=f"Congestion Surface (Density = {density:.0f} veh/km)",
-            scene=dict(
-                xaxis=dict(
-                    title="Vehicles/minute",
-                    backgroundcolor="rgb(240, 240, 240)",
-                    gridcolor="white",
-                ),
-                yaxis=dict(
-                    title="Speed (km/h)",
-                    backgroundcolor="rgb(240, 240, 240)",
-                    gridcolor="white",
-                ),
-                zaxis=dict(
-                    title="Congestion Level",
-                    backgroundcolor="rgb(240, 240, 240)",
-                    gridcolor="white",
-                ),
-                camera=dict(eye=dict(x=1.5, y=-1.5, z=0.8)),
+    fig.update_layout(
+        title=f"Congestion Surface (Density = {density:.0f} veh/km)",
+        scene=dict(
+            xaxis=dict(
+                title="Vehicles/minute",
+                backgroundcolor="rgb(240, 240, 240)",
+                gridcolor="white",
             ),
-            margin=dict(l=50, r=50, b=50, t=50),
-        )
+            yaxis=dict(
+                title="Speed (km/h)",
+                backgroundcolor="rgb(240, 240, 240)",
+                gridcolor="white",
+            ),
+            zaxis=dict(
+                title="Congestion Level",
+                backgroundcolor="rgb(240, 240, 240)",
+                gridcolor="white",
+            ),
+            camera=dict(eye=dict(x=1.5, y=-1.5, z=0.8)),
+        ),
+        margin=dict(l=50, r=50, b=50, t=50),
+    )
 
-        # Save to cache
-        joblib.dump(fig, cache_path)
-        print(f"Saved surface to cache (density={density:.0f})")
-
-        fig.show()
+    joblib.dump(fig, cache_path)
+    print(f"Saved surface to cache (density={density:.0f})")
+    fig.show()
