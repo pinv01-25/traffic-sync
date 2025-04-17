@@ -5,13 +5,15 @@ This script orchestrates the full analysis pipeline, which includes:
 - Fuzzy logic modeling for traffic congestion classification
 - Hierarchical clustering (HC) of traffic sensor patterns
 - Interactive visualization tools (membership functions and 3D surfaces)
-- (Upcoming) Optimization with Particle Swarm Optimization (PSO)
+- Optimization with Particle Swarm Optimization (PSO)
 
 Execution Order:
     1. Visualize fuzzy membership functions
     2. Explore the 3D fuzzy output surface
-    3. Run fuzzy test cases for congestion inference
-    4. Apply hierarchical clustering to fuzzy output results
+    3. Load test cases from a JSON file
+    4. Run fuzzy test cases for congestion inference
+    5. Apply hierarchical clustering to fuzzy output results
+    6. Optimize traffic signal timing using PSO
 """
 
 import json
@@ -23,6 +25,7 @@ from modules.fuzzy.visualization import (
 
 from modules.fuzzy.evaluation import run_test_cases
 from modules.cluster.evaluation import run_clustering_test
+from modules.pso.optimization import traffic_pso_optimization
 
 # --------------------------------------------------
 # Main execution
@@ -64,3 +67,11 @@ if __name__ == "__main__":
     # Step 5: Apply hierarchical clustering to fuzzy output
     print("\nRunning test cases for hierarchical clustering...")
     clusters = run_clustering_test(fuzzy)
+
+    print("\n" + "=" * 60)
+    print(" PSO Traffic Light Optimization ")
+    print("=" * 60)
+
+    # Step 6: Optimize traffic signal timing using PSO
+    print("\nRunning PSO optimization...")
+    optimization_results = traffic_pso_optimization(clusters)

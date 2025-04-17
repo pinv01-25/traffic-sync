@@ -29,4 +29,4 @@ This documentation includes:
 
    modules/fuzzy/fuzzy
    modules/cluster/cluster
-   modules/PSO
+   modules/pso/pso
