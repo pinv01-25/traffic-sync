@@ -21,7 +21,7 @@ from modules.cluster.visualization import show_dendrogram
 # --------------------------------------------------
 
 
-def hierarchical_clustering(df, show_results=True):
+def hierarchical_clustering(df, no_plot=True):
     """
     Perform hierarchical clustering on fuzzy output values.
 
@@ -37,7 +37,7 @@ def hierarchical_clustering(df, show_results=True):
             - 'Density (veh/km)': Vehicle density
             - 'Expected': Ground truth congestion label
             - 'Predicted': Label inferred from fuzzy system
-        show_results (bool): Whether to display tabular output and dendrogram.
+        no_plot (bool): If True, suppresses plotting of the dendrogram.
 
     Returns:
         pd.DataFrame: DataFrame with cluster analysis results.
@@ -48,49 +48,48 @@ def hierarchical_clustering(df, show_results=True):
     # Compute cluster-level statistics
     df_results, stats = compute_cluster_stats(df, clusters)
 
-    if show_results:
-        # Generate sensor labels for dendrogram
-        labels = [f"Sensor {i + 1}" for i in range(len(df))]
+    # Generate sensor labels for dendrogram
+    labels = [f"Sensor {i + 1}" for i in range(len(df))]
 
-        # Print cluster summary
-        print("\nCluster Analysis:")
-        print(
-            tabulate(
-                stats,
-                headers="keys",
-                tablefmt="fancy_grid",
-                showindex=False,
-                numalign="center",
-            )
+    # Print cluster summary
+    print("\nCluster Analysis:")
+    print(
+        tabulate(
+            stats,
+            headers="keys",
+            tablefmt="fancy_grid",
+            showindex=False,
+            numalign="center",
         )
+    )
 
-        # Print detailed results per sensor
-        print("\nSensor Details:")
-        print(
-            tabulate(
-                df_results[
-                    [
-                        "VPM",
-                        "Speed (km/h)",
-                        "Density (veh/km)",
-                        "Expected",
-                        "Predicted",
-                        "cluster",
-                    ]
-                ],
-                headers=[
+    # Print detailed results per sensor
+    print("\nSensor Details:")
+    print(
+        tabulate(
+            df_results[
+                [
                     "VPM",
                     "Speed (km/h)",
-                    "Density",
+                    "Density (veh/km)",
                     "Expected",
                     "Predicted",
-                    "Cluster",
-                ],
-                tablefmt="fancy_grid",
-                showindex=False,
-            )
+                    "cluster",
+                ]
+            ],
+            headers=[
+                "VPM",
+                "Speed (km/h)",
+                "Density",
+                "Expected",
+                "Predicted",
+                "Cluster",
+            ],
+            tablefmt="fancy_grid",
+            showindex=False,
         )
-
+    )
+    if not no_plot:
         # Visualize dendrogram
         show_dendrogram(df[["value"]].values, labels)
 
@@ -102,7 +101,7 @@ def hierarchical_clustering(df, show_results=True):
 # --------------------------------------------------
 
 
-def run_clustering_test(df=None):
+def run_clustering_test(df=None, no_plot=True):
     """
     Run predefined test cases to validate hierarchical clustering.
 
@@ -129,4 +128,4 @@ def run_clustering_test(df=None):
 
         df = pd.DataFrame(data)
 
-    return hierarchical_clustering(df)
+    return hierarchical_clustering(df, no_plot)

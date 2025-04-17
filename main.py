@@ -16,6 +16,7 @@ Execution Order:
     6. Optimize traffic signal timing using PSO
 """
 
+from argparse import ArgumentParser
 import json
 
 from modules.fuzzy.visualization import (
@@ -26,12 +27,15 @@ from modules.fuzzy.visualization import (
 from modules.fuzzy.evaluation import run_test_cases
 from modules.cluster.evaluation import run_clustering_test
 from modules.pso.optimization import pso, pso_optimized
+import shutil
+import os
 
 # --------------------------------------------------
 # Main execution
 # --------------------------------------------------
 
-if __name__ == "__main__":
+
+def main():
     """
     Execute the full traffic analysis pipeline.
 
@@ -39,17 +43,35 @@ if __name__ == "__main__":
     execution of predefined test cases, and hierarchical clustering on
     the fuzzy output to identify sensor behavior patterns.
     """
+    parser = ArgumentParser(description="Traffic Sensor Analysis System")
+    parser.add_argument("--no-plot", action="store_true", help="Disable plotting")
+    parser.add_argument(
+        "--no-cache", action="store_true", help="Delete cache folder if it exists"
+    )
+    args = parser.parse_args()
+
     print("\n" + "=" * 60)
     print("Fuzzy Logic-Based Traffic Congestion Classification System")
     print("=" * 60 + "\n")
 
-    # Step 1: Display fuzzy membership functions
-    print("Displaying membership functions...")
-    plot_memberships()
+    if not args.no_plot:
+        # Step 1: Display fuzzy membership functions
+        print("Displaying membership functions...")
+        plot_memberships()
 
-    # Step 2: Launch interactive 3D fuzzy output surface
-    print("\nLaunching interactive 3D fuzzy output explorer...")
-    plot_interactive_3d_surface()
+        # Step 2: Launch interactive 3D fuzzy output surface
+        print("\nLaunching interactive 3D fuzzy output explorer...")
+        plot_interactive_3d_surface()
+    else:
+        print("Plotting is disabled via --no-plot.")
+
+    if args.no_cache:
+        cache_folder = "cache"
+        if os.path.exists(cache_folder):
+            print("\nDeleting cache folder...")
+            shutil.rmtree(cache_folder)
+        else:
+            print("\nNo cache folder found to delete.")
 
     # Step 3: Load test cases from JSON file
     print("\nLoading test cases from JSON file...")
@@ -66,7 +88,7 @@ if __name__ == "__main__":
 
     # Step 5: Apply hierarchical clustering to fuzzy output
     print("\nRunning test cases for hierarchical clustering...")
-    clusters = run_clustering_test(fuzzy)
+    clusters = run_clustering_test(fuzzy, no_plot=args.no_plot)
 
     print("\n" + "=" * 60)
     print(" PSO Traffic Light Optimization ")
@@ -88,4 +110,8 @@ if __name__ == "__main__":
     else:
         print("\nInvalid option selected. Defaulting to PSO with early stopping.")
         option = "1"
-    optimization_results = pso_optimized(clusters) if option == "1" else pso(clusters)
+    pso_optimized(clusters) if option == "1" else pso(clusters)
+
+
+if __name__ == "__main__":
+    main()
