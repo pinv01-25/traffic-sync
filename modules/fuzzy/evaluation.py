@@ -80,28 +80,26 @@ def evaluate_congestion(vpm, spd, den):
 # --------------------------------------------------
 
 
-def run_test_cases():
+def run_test_cases(json_data):
     """
-    Run predefined test cases to validate the fuzzy congestion system.
+    Run fuzzy evaluation on traffic test cases loaded from JSON.
 
-    Each test case includes input values (vehicles, speed, density) and an expected
-    linguistic category. The results are printed in a formatted table.
+    This function takes a list of dictionaries representing traffic observations,
+    evaluates fuzzy congestion, and prints the results in tabular format.
+
+    Args:
+        json_data (list[dict]): List of traffic input samples. Each item must contain:
+            - 'vpm': Vehicles per minute
+            - 'spd': Average speed (km/h)
+            - 'den': Vehicle density (veh/km)
+            - 'expected': Expected linguistic congestion category
 
     Returns:
-        pd.DataFrame: DataFrame containing test inputs, predictions, and membership values.
+        pd.DataFrame: DataFrame with fuzzy outputs and membership breakdown.
     """
-    test_inputs = [
-        {"vpm": 15, "spd": 50, "den": 60, "expected": "none"},  # Normal traffic
-        {"vpm": 30, "spd": 35, "den": 90, "expected": "mild"},  # Mild congestion
-        {"vpm": 45, "spd": 20, "den": 130, "expected": "severe"},  # Severe congestion
-        {"vpm": 25, "spd": 40, "den": 70, "expected": "mild"},  # Mild congestion
-        {"vpm": 30, "spd": 50, "den": 60, "expected": "none"},  # Normal traffic
-        {"vpm": 20, "spd": 30, "den": 140, "expected": "mild"},  # Mild congestion
-        {"vpm": 35, "spd": 15, "den": 100, "expected": "severe"},  # Severe congestion
-    ]
-
     results = []
-    for test in test_inputs:
+
+    for test in json_data:
         result = evaluate_congestion(test["vpm"], test["spd"], test["den"])
 
         membresias_str = " | ".join(

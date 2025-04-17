@@ -1,0 +1,10 @@
+[
+    { "vpm": 15, "spd": 50, "den": 60,  "expected": "none" },
+    { "vpm": 30, "spd": 35, "den": 90,  "expected": "mild" },
+    { "vpm": 45, "spd": 20, "den": 130, "expected": "severe" },
+    { "vpm": 25, "spd": 40, "den": 70,  "expected": "mild" },
+    { "vpm": 30, "spd": 50, "den": 60,  "expected": "none" },
+    { "vpm": 20, "spd": 30, "den": 140, "expected": "mild" },
+    { "vpm": 35, "spd": 15, "den": 100, "expected": "severe" }
+  ]
+  

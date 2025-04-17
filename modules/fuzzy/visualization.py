@@ -197,6 +197,7 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
         fig.update_yaxes(title_text="Membership Degree", range=[0, 1.1], row=i, col=1)
 
     joblib.dump(fig, cache_path)
+    print("Membership plot saved to cache.")
     fig.show()
 
 

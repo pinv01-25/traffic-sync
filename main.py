@@ -14,6 +14,8 @@ Execution Order:
     4. Apply hierarchical clustering to fuzzy output results
 """
 
+import json
+
 from modules.fuzzy.visualization import (
     plot_memberships,
     plot_interactive_3d_surface,
@@ -46,14 +48,19 @@ if __name__ == "__main__":
     print("\nLaunching interactive 3D fuzzy output explorer...")
     plot_interactive_3d_surface()
 
-    # Step 3: Evaluate test cases using fuzzy logic
+    # Step 3: Load test cases from JSON file
+    print("\nLoading test cases from JSON file...")
+    with open("test_cases.json", "r") as f:
+        test_data = json.load(f)
+
+    # Step 4: Evaluate test cases using fuzzy logic
     print("\nRunning test cases for fuzzy evaluation...")
-    fuzzy = run_test_cases()
+    fuzzy = run_test_cases(test_data)
 
     print("\n" + "=" * 60)
     print(" Traffic Sensor Clustering System ")
     print("=" * 60)
 
-    # Step 4: Apply hierarchical clustering to fuzzy output
+    # Step 5: Apply hierarchical clustering to fuzzy output
     print("\nRunning test cases for hierarchical clustering...")
     clusters = run_clustering_test(fuzzy)
