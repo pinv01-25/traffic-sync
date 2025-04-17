@@ -16,7 +16,7 @@ import pandas as pd
 
 
 # --------------------------------------------------
-# Evaluation function
+# Evaluation functions
 # --------------------------------------------------
 
 
@@ -73,6 +73,27 @@ def evaluate_congestion(vpm, spd, den):
         }
     except Exception as e:
         return {"error": str(e)}
+
+
+def get_congestion_category(value):
+    """
+    Get the linguistic category for a given congestion value.
+
+    Args:
+        value (float): Congestion value.
+
+    Returns:
+        str: Linguistic category ('none', 'mild', or 'severe').
+    """
+    m_ninguna = fuzz.interp_membership(
+        congestion.universe, congestion["none"].mf, value
+    )
+    m_leve = fuzz.interp_membership(congestion.universe, congestion["mild"].mf, value)
+    m_severa = fuzz.interp_membership(
+        congestion.universe, congestion["severe"].mf, value
+    )
+
+    return max(zip([m_ninguna, m_leve, m_severa], ["none", "mild", "severe"]))[1]
 
 
 # --------------------------------------------------
