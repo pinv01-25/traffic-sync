@@ -28,5 +28,5 @@ This documentation includes:
    :caption: Contents:
 
    modules/fuzzy/fuzzy
-   modules/HC
+   modules/cluster/cluster
    modules/PSO
