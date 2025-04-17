@@ -25,7 +25,7 @@ from modules.fuzzy.visualization import (
 
 from modules.fuzzy.evaluation import run_test_cases
 from modules.cluster.evaluation import run_clustering_test
-from modules.pso.optimization import traffic_pso_optimization
+from modules.pso.optimization import pso, pso_optimized
 
 # --------------------------------------------------
 # Main execution
@@ -72,6 +72,20 @@ if __name__ == "__main__":
     print(" PSO Traffic Light Optimization ")
     print("=" * 60)
 
+    print("Select the PSO optimization method:")
+    print(
+        "1. PSO with early stopping and partial results restarts (very fast, less accurate)"
+    )
+    print("2. PSO without optimizations (very slow, more accurate)")
+
+    option = input("Enter your choice (1 or 2): ").strip()
+
     # Step 6: Optimize traffic signal timing using PSO
-    print("\nRunning PSO optimization...")
-    optimization_results = traffic_pso_optimization(clusters)
+    if option == "1":
+        print("\nRunning PSO with early stopping and partial results restarts...")
+    elif option == "2":
+        print("\nRunning PSO without optimizations...")
+    else:
+        print("\nInvalid option selected. Defaulting to PSO with early stopping.")
+        option = "1"
+    optimization_results = pso_optimized(clusters) if option == "1" else pso(clusters)
