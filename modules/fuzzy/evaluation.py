@@ -88,7 +88,7 @@ def run_test_cases():
     linguistic category. The results are printed in a formatted table.
 
     Returns:
-        None
+        pd.DataFrame: DataFrame containing test inputs, predictions, and membership values.
     """
     test_inputs = [
         {"vpm": 15, "spd": 50, "den": 60, "expected": "none"},  # Normal traffic
@@ -123,3 +123,5 @@ def run_test_cases():
     df_results = pd.DataFrame(results)
     print("\nTest Case Results:\n")
     print(tabulate(df_results, headers="keys", tablefmt="fancy_grid", showindex=True))
+
+    return df_results
