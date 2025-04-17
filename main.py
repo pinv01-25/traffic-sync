@@ -29,6 +29,7 @@ from modules.cluster.evaluation import run_clustering_test
 from modules.pso.optimization import pso, pso_optimized
 import shutil
 import os
+from modules.utils import generate_random_test_cases
 
 # --------------------------------------------------
 # Main execution
@@ -73,10 +74,30 @@ def main():
         else:
             print("\nNo cache folder found to delete.")
 
-    # Step 3: Load test cases from JSON file
-    print("\nLoading test cases from JSON file...")
-    with open("test_cases.json", "r") as f:
-        test_data = json.load(f)
+    # Step 3: Load or generate test cases
+    print("\nWould you like to use default test cases or generate random ones?")
+    print("1. Use default test cases")
+    print("2. Generate random test cases")
+
+    choice = input("Enter your choice (1 or 2): ").strip()
+
+    if choice == "1":
+        print("\nLoading test cases from JSON file...")
+        with open("test_cases.json", "r") as f:
+            test_data = json.load(f)
+    elif choice == "2":
+        num_cases = input("Enter the number of random test cases to generate: ").strip()
+        while not num_cases.isdigit() or int(num_cases) <= 0:
+            print("Please enter a valid positive integer.")
+            num_cases = input(
+                "Enter the number of random test cases to generate: "
+            ).strip()
+
+        num_cases = int(num_cases)
+        print(f"\nGenerating {num_cases} random test cases...")
+        test_data = generate_random_test_cases(num_cases)
+    else:
+        print("\nInvalid choice. Defaulting to using default test cases.")
 
     # Step 4: Evaluate test cases using fuzzy logic
     print("\nRunning test cases for fuzzy evaluation...")
