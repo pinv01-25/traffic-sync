@@ -166,7 +166,7 @@ def pso_optimized(clusters_df):
                         velocities[idx] = 0
                     no_improvement = 0
                 else:
-                    print(f"Early stopping at iteration {_} for cluster {cluster}.")
+                    print(f"\nEarly stopping at iteration {_} for cluster {cluster}.")
                     break
 
         # Extract optimal green time from best global position
@@ -182,10 +182,16 @@ def pso_optimized(clusters_df):
             "Optimized Category": get_congestion_category(
                 float(best_scores[global_best_idx])
             ),
+            "Improvement": f"{(best_scores[global_best_idx] / cluster_data['Congestion Mean']) * 100:.2f}%",
         }
 
         print(
-            f"Cluster {cluster} optimized: Green={green_time:.2f}, Congestion={best_scores[global_best_idx]:.2f}"
+            f"\nCluster {cluster} optimized | "
+            f"Green time={green_time:.2f}s | "
+            f"Red time={(CYCLE_TIME - green_time):.2f}s | "
+            f"Original Congestion={cluster_data['Congestion Mean']} | "
+            f"Optimized Congestion={best_scores[global_best_idx]:.2f} | "
+            f"Improvement={(best_scores[global_best_idx]/cluster_data['Congestion Mean'])*100:.2f}%"
         )
 
     # Display results in tabular format

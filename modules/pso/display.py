@@ -55,13 +55,17 @@ def display_optimization_results(optimization_results, clusters_df):
         "Cycle",
         "Optimized Congestion",
         "Optimized Category",
+        "Improvement",
     ]
+    
+    # Modify headers to use newline (\n) instead of spaces to allow multi-line column titles
+    formatted_headers = [col.replace(" ", "\n").title() for col in display_cols]
 
     # Render the formatted table using tabulate for clean CLI output
     print(
         tabulate(
             merged_data[display_cols],
-            headers=[col.replace("_", " ").title() for col in display_cols],
+            headers=formatted_headers,
             tablefmt="fancy_grid",
             floatfmt=".2f",
             showindex=False,
