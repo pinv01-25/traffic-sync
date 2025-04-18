@@ -17,9 +17,9 @@ from plotly.subplots import make_subplots
 import joblib
 import os
 from modules.fuzzy.system import (
-    density_range,
-    vehicle_range,
-    speed_range,
+    DENSITY_RANGE,
+    VEHICLE_RANGE,
+    SPEED_RANGE,
     simulator,
 )
 
@@ -65,22 +65,22 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     # Vehicles per minute
     fig.add_trace(
         go.Scatter(
-            x=vehicle_range,
-            y=fuzz.trapmf(vehicle_range, [0, 0, 15, 25]),
+            x=VEHICLE_RANGE,
+            y=fuzz.trapmf(VEHICLE_RANGE, [0, 0, 15, 25]),
             name="Low",
         ),
         row=1,
         col=1,
     )
     fig.add_trace(
-        go.Scatter(x=vehicle_range, y=fuzz.gaussmf(vehicle_range, 30, 5), name="Mid"),
+        go.Scatter(x=VEHICLE_RANGE, y=fuzz.gaussmf(VEHICLE_RANGE, 30, 5), name="Mid"),
         row=1,
         col=1,
     )
     fig.add_trace(
         go.Scatter(
-            x=vehicle_range,
-            y=fuzz.trapmf(vehicle_range, [35, 40, 50, 50]),
+            x=VEHICLE_RANGE,
+            y=fuzz.trapmf(VEHICLE_RANGE, [35, 40, 50, 50]),
             name="High",
         ),
         row=1,
@@ -90,8 +90,8 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     # Speed
     fig.add_trace(
         go.Scatter(
-            x=speed_range,
-            y=fuzz.trapmf(speed_range, [0, 0, 20, 30]),
+            x=SPEED_RANGE,
+            y=fuzz.trapmf(SPEED_RANGE, [0, 0, 20, 30]),
             name="Low",
             showlegend=False,
         ),
@@ -100,8 +100,8 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     )
     fig.add_trace(
         go.Scatter(
-            x=speed_range,
-            y=fuzz.gaussmf(speed_range, 35, 5),
+            x=SPEED_RANGE,
+            y=fuzz.gaussmf(SPEED_RANGE, 35, 5),
             name="Mid",
             showlegend=False,
         ),
@@ -110,8 +110,8 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     )
     fig.add_trace(
         go.Scatter(
-            x=speed_range,
-            y=fuzz.trapmf(speed_range, [40, 50, 60, 60]),
+            x=SPEED_RANGE,
+            y=fuzz.trapmf(SPEED_RANGE, [40, 50, 60, 60]),
             name="High",
             showlegend=False,
         ),
@@ -122,8 +122,8 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     # Density
     fig.add_trace(
         go.Scatter(
-            x=density_range,
-            y=fuzz.trapmf(density_range, [0, 0, 50, 80]),
+            x=DENSITY_RANGE,
+            y=fuzz.trapmf(DENSITY_RANGE, [0, 0, 50, 80]),
             name="Low",
             showlegend=False,
         ),
@@ -132,8 +132,8 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     )
     fig.add_trace(
         go.Scatter(
-            x=density_range,
-            y=fuzz.gaussmf(density_range, 100, 15),
+            x=DENSITY_RANGE,
+            y=fuzz.gaussmf(DENSITY_RANGE, 100, 15),
             name="Mid",
             showlegend=False,
         ),
@@ -142,8 +142,8 @@ def plot_memberships(cache_path="cache/membership_plot.pkl"):
     )
     fig.add_trace(
         go.Scatter(
-            x=density_range,
-            y=fuzz.trapmf(density_range, [120, 130, 150, 150]),
+            x=DENSITY_RANGE,
+            y=fuzz.trapmf(DENSITY_RANGE, [120, 130, 150, 150]),
             name="High",
             showlegend=False,
         ),
@@ -220,11 +220,11 @@ def plot_interactive_3d_surface(density=100, cache_dir="cache/3d_surface"):
         None
 
     Raises:
-        ValueError: If the provided density is outside the allowed density_range.
+        ValueError: If the provided density is outside the allowed DENSITY_RANGE.
     """
-    if density < np.min(density_range) or density > np.max(density_range):
+    if density < np.min(DENSITY_RANGE) or density > np.max(DENSITY_RANGE):
         raise ValueError(
-            f"Density {density} is out of bounds. Must be within {np.min(density_range)} and {np.max(density_range)}."
+            f"Density {density} is out of bounds. Must be within {np.min(DENSITY_RANGE)} and {np.max(DENSITY_RANGE)}."
         )
 
     res = 30

@@ -12,32 +12,32 @@ import skfuzzy as fuzz
 # --------------------------------------------------
 
 #: Universe of discourse for vehicle rate (vehicles per minute).
-vehicle_range = np.arange(0, 51, 1)
+VEHICLE_RANGE = np.arange(0, 51, 1)
 
 #: Universe of discourse for average speed (km/h).
-speed_range = np.arange(0, 61, 1)
+SPEED_RANGE = np.arange(0, 61, 1)
 
 #: Universe of discourse for vehicle density (vehicles/km).
-density_range = np.arange(0, 151, 1)
+DENSITY_RANGE = np.arange(0, 151, 1)
 
 #: Universe of discourse for congestion level (0 to 10).
-congestion_range = np.arange(0, 11, 1)
+CONGESTION_RANGE = np.arange(0, 11, 1)
 
 # --------------------------------------------------
 # Fuzzy Variables
 # --------------------------------------------------
 
 #: Fuzzy variable representing number of vehicles per minute.
-vehicles = ctrl.Antecedent(vehicle_range, "vehicles")
+vehicles = ctrl.Antecedent(VEHICLE_RANGE, "vehicles")
 
 #: Fuzzy variable representing average speed in km/h.
-speed = ctrl.Antecedent(speed_range, "speed")
+speed = ctrl.Antecedent(SPEED_RANGE, "speed")
 
 #: Fuzzy variable representing vehicle density in vehicles/km.
-density = ctrl.Antecedent(density_range, "density")
+density = ctrl.Antecedent(DENSITY_RANGE, "density")
 
 #: Fuzzy output variable representing congestion level.
-congestion = ctrl.Consequent(congestion_range, "congestion")
+congestion = ctrl.Consequent(CONGESTION_RANGE, "congestion")
 
 # --------------------------------------------------
 # Membership Functions
@@ -68,7 +68,7 @@ congestion["severe"] = fuzz.trapmf(congestion.universe, [6, 8, 10, 10])
 # --------------------------------------------------
 
 """List of fuzzy rules for traffic congestion inference."""
-rules = [
+RULES = [
     # vehicles: low  |   speed: low   |   density: [low, mid, high]
     ctrl.Rule(vehicles["low"] & speed["low"] & density["low"], congestion["mild"]),
     ctrl.Rule(vehicles["low"] & speed["low"] & density["mid"], congestion["mild"]),
@@ -112,7 +112,7 @@ rules = [
 # --------------------------------------------------
 
 #: The full fuzzy control system object.
-congestion_system = ctrl.ControlSystem(rules)
+congestion_system = ctrl.ControlSystem(RULES)
 
 #: Fuzzy simulation engine used for evaluating new inputs.
 simulator = ctrl.ControlSystemSimulation(congestion_system)

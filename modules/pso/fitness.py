@@ -10,7 +10,7 @@ Functions:
     - fitness_function: Compute congestion level based on PSO particle and fuzzy logic.
 """
 
-from modules.fuzzy.system import simulator, vehicle_range, density_range, speed_range
+from modules.fuzzy.system import simulator, VEHICLE_RANGE, DENSITY_RANGE, SPEED_RANGE
 
 # --------------------------------------------------
 # Optimization Parameters
@@ -56,9 +56,9 @@ def calculate_green_time(cluster_data):
     VPM = cluster_data["VPM Mean"]
 
     # Weighted components of the green time formula
-    term1 = ALPHA * (D / max(density_range))
-    term2 = BETA * (1 - V / max(speed_range))
-    term3 = GAMMA * (VPM / max(vehicle_range))
+    term1 = ALPHA * (D / max(DENSITY_RANGE))
+    term2 = BETA * (1 - V / max(SPEED_RANGE))
+    term3 = GAMMA * (VPM / max(VEHICLE_RANGE))
 
     return T_MIN + term1 + term2 + term3
 

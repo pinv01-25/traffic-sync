@@ -30,6 +30,25 @@ PARTICLES = 30
 #: Maximum number of iterations for PSO.
 MAX_ITER = 100
 
+#: Inertia weight (controls the impact of previous velocity on the current one).
+W = 0.8
+
+#: Cognitive component (particle's memory of its best-known position).
+C1 = 1.5
+
+#: Social component (swarm-wide memory of best-known position).
+C2 = 1.5
+
+
+# --------------------------------------------------
+# Early Stopping Parameters
+# --------------------------------------------------
+
+#: Number of iterations allowed without improvement before early stopping.
+PATIENCE = 10
+
+#: Minimum required improvement between iterations to avoid triggering early stopping.
+IMPROVEMENT_THRESHOLD = 1e-3
 
 # --------------------------------------------------
 # PSO Optimization
@@ -92,12 +111,7 @@ def pso_optimized(clusters_df):
         global_best_idx = np.argmin(best_scores)
         global_best = particles[global_best_idx]
 
-        # PSO adaptive parameters
-        w, c1, c2 = 0.8, 1.5, 1.5
-
         # Early stopping configuration
-        patience = 10
-        improvement_threshold = 1e-3
         no_improvement = 0
         last_best = best_scores[global_best_idx]
 
@@ -107,9 +121,9 @@ def pso_optimized(clusters_df):
                 # Velocity update with adaptive formula
                 r1, r2 = np.random.rand(2)
                 velocities[i] = (
-                    w * velocities[i]
-                    + c1 * r1 * (best_positions[i] - particles[i])
-                    + c2 * r2 * (global_best - particles[i])
+                    W * velocities[i]
+                    + C1 * r1 * (best_positions[i] - particles[i])
+                    + C2 * r2 * (global_best - particles[i])
                 )
                 particles[i] = np.clip(
                     particles[i] + velocities[i], T_MIN, CYCLE_TIME - 20
@@ -131,14 +145,14 @@ def pso_optimized(clusters_df):
                     global_best = particles[i].copy()
 
             current_best = best_scores[global_best_idx]
-            if abs(last_best - current_best) < improvement_threshold:
+            if abs(last_best - current_best) < IMPROVEMENT_THRESHOLD:
                 no_improvement += 1
             else:
                 no_improvement = 0
             last_best = current_best
 
             # Restart particles if stuck in poor minima
-            if no_improvement >= patience:
+            if no_improvement >= PATIENCE:
                 if best_scores[global_best_idx] > 5:
                     print(
                         f"Stuck with high congestion in cluster {cluster}, re-diversifying..."
@@ -233,11 +247,6 @@ def pso(clusters_df):
         global_best_idx = np.argmin(best_scores)
         global_best = particles[global_best_idx]
 
-        # PSO adaptive parameters
-        w = 0.8  # Inertia weight
-        c1 = 1.5  # Cognitive learning factor
-        c2 = 1.5  # Social learning factor
-
         # Run PSO loop
         for _ in tqdm(range(MAX_ITER), desc=f"PSO Cluster [{cluster}]", leave=False):
             for i in range(PARTICLES):
@@ -256,9 +265,9 @@ def pso(clusters_df):
                 # Velocity update with adaptive formula
                 r1, r2 = np.random.rand(2)
                 velocities[i] = (
-                    w * velocities[i]
-                    + c1 * r1 * (best_positions[i] - particles[i])
-                    + c2 * r2 * (global_best - particles[i])
+                    W * velocities[i]
+                    + C1 * r1 * (best_positions[i] - particles[i])
+                    + C2 * r2 * (global_best - particles[i])
                 )
 
                 # Update particle position with boundary clipping

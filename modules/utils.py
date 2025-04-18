@@ -1,5 +1,5 @@
 import random
-from modules.fuzzy.system import vehicle_range, speed_range, density_range
+from modules.fuzzy.system import VEHICLE_RANGE, SPEED_RANGE, DENSITY_RANGE
 
 
 def generate_random_test_cases(n_cases: int) -> list:
@@ -17,9 +17,9 @@ def generate_random_test_cases(n_cases: int) -> list:
 
     for _ in range(n_cases):
         case = {
-            "vpm": int(random.choice(vehicle_range)),
-            "spd": int(random.choice(speed_range)),
-            "den": int(random.choice(density_range)),
+            "vpm": int(random.choice(VEHICLE_RANGE)),
+            "spd": int(random.choice(SPEED_RANGE)),
+            "den": int(random.choice(DENSITY_RANGE)),
             "expected": "random",
         }
         test_cases.append(case)
