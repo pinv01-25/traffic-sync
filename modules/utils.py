@@ -41,5 +41,5 @@ def print_section_title(title: str, width: int = 120, underline: str = "="):
     """
     centered_title = title.center(width)
     print(underline * len(centered_title))
-    print("\n" + centered_title)
+    print("\n" + centered_title + "\n")
     print(underline * len(centered_title))
