@@ -141,6 +141,10 @@ def run_test_cases(json_data):
 
     df_results = pd.DataFrame(results)
     print("\nTest Case Results:\n")
-    print(tabulate(df_results, headers="keys", tablefmt="fancy_grid", showindex=True))
+    print(
+        tabulate(
+            df_results.head(), headers="keys", tablefmt="fancy_grid", showindex=True
+        )
+    )
 
     return df_results

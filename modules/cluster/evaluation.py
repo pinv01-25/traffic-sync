@@ -76,7 +76,7 @@ def hierarchical_clustering(df, no_plot=True):
                     "Predicted",
                     "cluster",
                 ]
-            ],
+            ].head(),
             headers=[
                 "VPM",
                 "Speed (km/h)",
