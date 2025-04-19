@@ -18,7 +18,10 @@ from joblib import Parallel, delayed
 from modules.fuzzy.evaluation import get_congestion_category
 from modules.pso.fitness import fitness_function, calculate_green_time
 from modules.pso.fitness import T_MIN, CYCLE_TIME
-from modules.pso.display import display_optimization_results
+from modules.pso.display import (
+    display_optimization_results,
+    display_optimization_comparison,
+)
 
 # --------------------------------------------------
 # PSO Configuration Parameters
@@ -155,7 +158,7 @@ def pso_optimized(clusters_df):
             if no_improvement >= PATIENCE:
                 if best_scores[global_best_idx] > 5:
                     print(
-                        f"Stuck with high congestion in cluster {cluster}, re-diversifying..."
+                        f"\n❌ Stuck with high congestion in cluster {cluster}, re-diversifying..."
                     )
                     restart_idx = np.random.choice(
                         PARTICLES, size=PARTICLES // 5, replace=False
@@ -166,13 +169,13 @@ def pso_optimized(clusters_df):
                         velocities[idx] = 0
                     no_improvement = 0
                 else:
-                    print(f"\nEarly stopping at iteration {_} for cluster {cluster}.")
+                    print(f"\n⏱ Early stopping at iteration {_} for cluster {cluster}.")
                     break
 
         # Extract optimal green time from best global position
         green_time = float(global_best[0])
 
-        ## Store results for the cluster
+        # Store results for the cluster
         results[cluster] = {
             "Green": green_time,
             "Red": CYCLE_TIME - green_time,
@@ -182,21 +185,26 @@ def pso_optimized(clusters_df):
             "Optimized Category": get_congestion_category(
                 float(best_scores[global_best_idx])
             ),
-            "Improvement": f"{(best_scores[global_best_idx] / cluster_data['Congestion Mean']) * 100:.2f}%",
+            "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",
+            "Optimized VPM": cluster_data["VPM Mean"] * (green_time / CYCLE_TIME),
+            "Optimized Speed": cluster_data["Speed Mean"]
+            * (1 + 0.01 * (green_time - T_MIN)),
+            "Optimized Density": cluster_data["Density Mean"]
+            * ((CYCLE_TIME - green_time) / CYCLE_TIME),
         }
 
         print(
-            f"\nCluster {cluster} optimized | "
+            f"\n✅ Cluster {cluster} optimized | "
             f"Green time={green_time:.2f}s | "
             f"Red time={(CYCLE_TIME - green_time):.2f}s | "
             f"Original Congestion={cluster_data['Congestion Mean']} | "
             f"Optimized Congestion={best_scores[global_best_idx]:.2f} | "
-            f"Improvement={(best_scores[global_best_idx] / cluster_data['Congestion Mean']) * 100:.2f}%"
+            f"Improvement={(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%"
         )
 
     # Display results in tabular format
     display_optimization_results(pd.DataFrame(results).T, clusters_df)
-
+    display_optimization_comparison(pd.DataFrame(results).T, clusters_df)
     return pd.DataFrame(results).T
 
 
@@ -284,7 +292,7 @@ def pso(clusters_df):
         # Extract optimal green time from best global position
         green_time = float(global_best[0])
 
-        ## Store results for the cluster
+        # Store results for the cluster
         results[cluster] = {
             "Green": green_time,
             "Red": CYCLE_TIME - green_time,
@@ -294,13 +302,25 @@ def pso(clusters_df):
             "Optimized Category": get_congestion_category(
                 float(best_scores[global_best_idx])
             ),
+            "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",
+            "Optimized VPM": cluster_data["VPM Mean"] * (green_time / CYCLE_TIME),
+            "Optimized Speed": cluster_data["Speed Mean"]
+            * (1 + 0.01 * (green_time - T_MIN)),
+            "Optimized Density": cluster_data["Density Mean"]
+            * ((CYCLE_TIME - green_time) / CYCLE_TIME),
         }
 
         print(
-            f"Cluster {cluster} optimized: Green={green_time:.2f}, Congestion={best_scores[global_best_idx]:.2f}"
+            f"\nCluster {cluster} optimized | "
+            f"Green time={green_time:.2f}s | "
+            f"Red time={(CYCLE_TIME - green_time):.2f}s | "
+            f"Original Congestion={cluster_data['Congestion Mean']} | "
+            f"Optimized Congestion={best_scores[global_best_idx]:.2f} | "
+            f"Improvement={(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%"
         )
 
     # Display results in tabular format
     display_optimization_results(pd.DataFrame(results).T, clusters_df)
+    display_optimization_comparison(pd.DataFrame(results).T, clusters_df)
 
     return pd.DataFrame(results).T

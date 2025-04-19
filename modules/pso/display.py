@@ -10,6 +10,7 @@ Functions:
 """
 
 from tabulate import tabulate
+from modules.utils import print_section_title
 
 
 def display_optimization_results(optimization_results, clusters_df):
@@ -46,26 +47,101 @@ def display_optimization_results(optimization_results, clusters_df):
     # Define the columns to include in the output table
     display_cols = [
         "Cluster",
-        "Expected Mode",
         "Predicted Mode",
+        "Optimized Category",
         "Congestion Mean",
+        "Optimized Congestion",
+        "Improvement",
         "Base Green",
         "Green",
         "Red",
         "Cycle",
-        "Optimized Congestion",
-        "Optimized Category",
-        "Improvement",
     ]
-    
+
     # Modify headers to use newline (\n) instead of spaces to allow multi-line column titles
-    formatted_headers = [col.replace(" ", "\n").title() for col in display_cols]
+    column_headers = {
+        "Cluster": "Cluster",
+        "Predicted Mode": "Original\nCategory",
+        "Optimized Category": "Optimized\nCategory",
+        "Congestion Mean": "Original\nCongestion",
+        "Optimized Congestion": "Optimized\nCongestion",
+        "Improvement": "Improvement\n(%)",
+        "Base Green": "Base Green\nTime (s)",
+        "Green": "Green\nTime (s)",
+        "Red": "Red\nTime (s)",
+        "Cycle": "Cycle\nTime (s)",
+    }
+
+    headers = [column_headers[col] for col in display_cols]
 
     # Render the formatted table using tabulate for clean CLI output
+    print_section_title("🚦 PSO-Based Traffic Light Optimization Summary", width=142)
     print(
         tabulate(
             merged_data[display_cols],
-            headers=formatted_headers,
+            headers=headers,
+            tablefmt="fancy_grid",
+            floatfmt=".2f",
+            showindex=False,
+        )
+    )
+
+
+def display_optimization_comparison(optimization_results, clusters_df):
+    """
+    Display a comparison between original and optimized traffic data values.
+
+    This includes both fuzzy congestion estimation and physical metrics (VPM, Speed, Density).
+
+    Args:
+        optimization_results (pd.DataFrame): Optimized PSO results.
+        clusters_df (pd.DataFrame): Original cluster data.
+
+    Returns:
+        None
+    """
+    merged_data = clusters_df.merge(
+        optimization_results, left_on="Cluster", right_index=True
+    )
+
+    display_cols = [
+        "Cluster",
+        "Predicted Mode",  # Renamed to "Original Category"
+        "Optimized Category",
+        "Improvement",
+        "Congestion Mean",  # Renamed to "Original Congestion"
+        "Optimized Congestion",
+        "VPM Mean",  # Renamed to "Original VPM"
+        "Optimized VPM",
+        "Speed Mean",  # Renamed to "Original Speed"
+        "Optimized Speed",
+        "Density Mean",  # Renamed to "Original Density"
+        "Optimized Density",
+    ]
+
+    column_headers = {
+        "Cluster": "Cluster",
+        "Predicted Mode": "Original\nCategory",
+        "Optimized Category": "Optimized\nCategory",
+        "Improvement": "Improvement\n(%)",
+        "Congestion Mean": "Original\nCongestion",
+        "Optimized Congestion": "Optimized\nCongestion",
+        "VPM Mean": "Original\nVPM",
+        "Optimized VPM": "Optimized\nVPM",
+        "Speed Mean": "Original\nSpeed",
+        "Optimized Speed": "Optimized\nSpeed",
+        "Density Mean": "Original\nDensity",
+        "Optimized Density": "Optimized\nDensity",
+    }
+
+    headers = [column_headers[col] for col in display_cols]
+
+    # Render the formatted table using tabulate for clean CLI output
+    print_section_title("📊 Final Summary: Optimized Traffic Signal Timings", width=167)
+    print(
+        tabulate(
+            merged_data[display_cols],
+            headers=headers,
             tablefmt="fancy_grid",
             floatfmt=".2f",
             showindex=False,
