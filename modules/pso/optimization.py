@@ -191,7 +191,7 @@ def pso_optimized(clusters_df):
             f"Red time={(CYCLE_TIME - green_time):.2f}s | "
             f"Original Congestion={cluster_data['Congestion Mean']} | "
             f"Optimized Congestion={best_scores[global_best_idx]:.2f} | "
-            f"Improvement={(best_scores[global_best_idx]/cluster_data['Congestion Mean'])*100:.2f}%"
+            f"Improvement={(best_scores[global_best_idx] / cluster_data['Congestion Mean']) * 100:.2f}%"
         )
 
     # Display results in tabular format
