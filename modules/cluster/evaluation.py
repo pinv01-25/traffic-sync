@@ -93,7 +93,7 @@ def hierarchical_clustering(df, no_plot=True):
         # Visualize dendrogram
         show_dendrogram(df[["value"]].values, labels)
 
-    return stats
+    return stats, df_results
 
 
 # --------------------------------------------------

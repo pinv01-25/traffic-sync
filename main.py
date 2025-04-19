@@ -29,7 +29,7 @@ from modules.cluster.evaluation import run_clustering_test
 from modules.pso.optimization import pso, pso_optimized
 import shutil
 import os
-from modules.utils import generate_random_test_cases
+from modules.utils import generate_random_test_cases, consolidate_results
 
 # --------------------------------------------------
 # Main execution
@@ -109,7 +109,7 @@ def main():
 
     # Step 5: Apply hierarchical clustering to fuzzy output
     print("\nRunning test cases for hierarchical clustering...")
-    clusters = run_clustering_test(fuzzy, no_plot=args.no_plot)
+    clusters, sensors = run_clustering_test(fuzzy, no_plot=args.no_plot)
 
     print("\n" + "=" * 60)
     print(" PSO Traffic Light Optimization ")
@@ -131,7 +131,9 @@ def main():
     else:
         print("\nInvalid option selected. Defaulting to PSO with early stopping.")
         option = "1"
-    pso_optimized(clusters) if option == "1" else pso(clusters)
+    result = pso_optimized(clusters) if option == "1" else pso(clusters)
+
+    consolidate_results(sensors, result)
 
 
 if __name__ == "__main__":

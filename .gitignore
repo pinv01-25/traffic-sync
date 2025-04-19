@@ -175,3 +175,7 @@ cython_debug/
 
 # Cache files for plotly
 cache/
+
+# Results and output files
+output.txt
+consolidated_results.csv
