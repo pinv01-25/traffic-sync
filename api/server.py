@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -7,6 +7,9 @@ from modules.cluster.evaluation import hierarchical_clustering
 from modules.pso.optimization import pso
 from modules.utils import generate_random_test_cases, consolidate_results
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI(title="Traffic Sensor Analysis API")
 app.add_middleware(
@@ -16,6 +19,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.mount("/static", StaticFiles(directory="app"), name="static")
 
 
 class TestCase(BaseModel):
@@ -33,8 +37,13 @@ def run_pipeline(test_data: List[dict]):
     return final_df.to_dict(orient="records")
 
 
+@app.get("/")
+def root():
+    return FileResponse(os.path.join("app", "index.html"))
+
+
 @app.post("/evaluate")
-def evaluate_json(test_cases: List[TestCase]):
+def evaluate_json(test_cases: List[TestCase] = Body(...)):
     test_data = [item.dict() for item in test_cases]
     results = run_pipeline(test_data)
     return {"result": results}
