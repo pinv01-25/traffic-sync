@@ -95,7 +95,7 @@ def compute_cluster_stats(df, clusters):
         df_results.groupby("cluster")
         .agg(
             {
-                "Expected": lambda x: x.mode()[0],
+                "Expected": lambda x: x.mode().iloc[0] if not x.mode().empty else None,
                 "Predicted": lambda x: x.mode()[0],
                 "value": ["mean", lambda x: x.std(ddof=0)],
                 "VPM": "mean",
