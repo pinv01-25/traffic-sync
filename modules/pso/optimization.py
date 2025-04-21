@@ -11,17 +11,12 @@ Functions:
     - pso: Baseline PSO implementation.
 """
 
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from modules.fuzzy.evaluation import get_congestion_category
 from modules.pso.fitness import fitness_function, calculate_green_time
 from modules.pso.fitness import T_MIN, CYCLE_TIME
-from modules.pso.display import (
-    display_optimization_results,
-    display_optimization_comparison,
-)
 
 # --------------------------------------------------
 # PSO Configuration Parameters
@@ -58,7 +53,7 @@ IMPROVEMENT_THRESHOLD = 1e-3
 # --------------------------------------------------
 
 
-def pso_optimized(clusters_df):
+def pso(clusters_df):
     """
     Execute PSO optimization for traffic signal timing with early stopping and restart mechanisms.
 
@@ -90,9 +85,7 @@ def pso_optimized(clusters_df):
     results = {}
 
     # Iterate over unique cluster labels
-    for cluster in tqdm(clusters_df["Cluster"].unique(), desc="Processing Clusters"):
-        print(f"\nOptimizing Cluster: {cluster}")
-
+    for cluster in clusters_df["Cluster"].unique():
         # Extract representative row for the cluster
         cluster_data = clusters_df[clusters_df["Cluster"] == cluster].iloc[0]
 
@@ -119,7 +112,7 @@ def pso_optimized(clusters_df):
         last_best = best_scores[global_best_idx]
 
         # Run PSO loop
-        for _ in tqdm(range(MAX_ITER), desc=f"PSO Cluster [{cluster}]", leave=False):
+        for _ in range(MAX_ITER):
             for i in range(PARTICLES):
                 # Velocity update with adaptive formula
                 r1, r2 = np.random.rand(2)
@@ -157,9 +150,6 @@ def pso_optimized(clusters_df):
             # Restart particles if stuck in poor minima
             if no_improvement >= PATIENCE:
                 if best_scores[global_best_idx] > 5:
-                    print(
-                        f"\n❌ Stuck with high congestion in cluster {cluster}, re-diversifying..."
-                    )
                     restart_idx = np.random.choice(
                         PARTICLES, size=PARTICLES // 5, replace=False
                     )
@@ -169,7 +159,6 @@ def pso_optimized(clusters_df):
                         velocities[idx] = 0
                     no_improvement = 0
                 else:
-                    print(f"\n⏱ Early stopping at iteration {_} for cluster {cluster}.")
                     break
 
         # Extract optimal green time from best global position
@@ -192,135 +181,4 @@ def pso_optimized(clusters_df):
             "Optimized Density": cluster_data["Density Mean"]
             * ((CYCLE_TIME - green_time) / CYCLE_TIME),
         }
-
-        print(
-            f"\n✅ Cluster {cluster} optimized | "
-            f"Green time={green_time:.2f}s | "
-            f"Red time={(CYCLE_TIME - green_time):.2f}s | "
-            f"Original Congestion={cluster_data['Congestion Mean']} | "
-            f"Optimized Congestion={best_scores[global_best_idx]:.2f} | "
-            f"Improvement={(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%"
-        )
-
-    # Display results in tabular format
-    display_optimization_results(pd.DataFrame(results).T, clusters_df)
-    display_optimization_comparison(pd.DataFrame(results).T, clusters_df)
-    return pd.DataFrame(results).T
-
-
-# --------------------------------------------------
-# Baseline PSO Implementation (No Early Stopping)
-# --------------------------------------------------
-
-
-def pso(clusters_df):
-    """
-    Run Particle Swarm Optimization (PSO) for each traffic cluster.
-
-    This function applies PSO to optimize green time allocation in a fixed traffic signal cycle.
-    Each cluster is processed independently, using fuzzy logic to evaluate congestion,
-    and the best configuration is stored.
-
-    Args:
-        clusters_df (pd.DataFrame): DataFrame containing per-cluster traffic statistics.
-            It must include the following columns:
-            - "Cluster": Cluster identifier.
-            - "VPM Mean": Mean vehicles per minute.
-            - "Speed Mean": Mean traffic speed (km/h).
-            - "Density Mean": Mean vehicle density (veh/km).
-            - "Expected Mode", "Predicted Mode", "Congestion Mean".
-
-    Returns:
-        pd.DataFrame: DataFrame indexed by cluster, including:
-            - Green (float): Optimized green time (seconds).
-            - Red (float): Remaining red time (seconds).
-            - Cycle (float): Total cycle time (seconds).
-            - Base Green (float): Green time from academic formula.
-            - Optimized Congestion (float): Fuzzy output congestion level.
-            - Optimized Category (str): Linguistic label ('none', 'mild', or 'severe').
-    """
-    # Dictionary to store optimization results per cluster
-    results = {}
-
-    # Iterate over unique cluster labels
-    for cluster in tqdm(clusters_df["Cluster"].unique(), desc="Processing Clusters"):
-        print(f"\nOptimizing Cluster: {cluster}")
-
-        # Extract representative row for the cluster
-        cluster_data = clusters_df[clusters_df["Cluster"] == cluster].iloc[0]
-
-        # Initialize particle positions and velocities within valid range
-        particles = np.random.uniform(T_MIN, CYCLE_TIME - 20, (PARTICLES, 1))
-        velocities = np.zeros_like(particles)
-        best_positions = particles.copy()
-
-        # Evaluate initial fitness for each particle
-        best_scores = np.array([fitness_function(p, cluster_data) for p in particles])
-
-        # Determine global best solution
-        global_best_idx = np.argmin(best_scores)
-        global_best = particles[global_best_idx]
-
-        # Run PSO loop
-        for _ in tqdm(range(MAX_ITER), desc=f"PSO Cluster [{cluster}]", leave=False):
-            for i in range(PARTICLES):
-                current_score = fitness_function(particles[i], cluster_data)
-
-                # Update personal best
-                if current_score < best_scores[i]:
-                    best_scores[i] = current_score
-                    best_positions[i] = particles[i].copy()
-
-                # Update global best
-                if current_score < best_scores[global_best_idx]:
-                    global_best_idx = i
-                    global_best = particles[i].copy()
-
-                # Velocity update with adaptive formula
-                r1, r2 = np.random.rand(2)
-                velocities[i] = (
-                    W * velocities[i]
-                    + C1 * r1 * (best_positions[i] - particles[i])
-                    + C2 * r2 * (global_best - particles[i])
-                )
-
-                # Update particle position with boundary clipping
-                particles[i] = np.clip(
-                    particles[i] + velocities[i], T_MIN, CYCLE_TIME - 20
-                )
-
-        # Extract optimal green time from best global position
-        green_time = float(global_best[0])
-
-        # Store results for the cluster
-        results[cluster] = {
-            "Green": green_time,
-            "Red": CYCLE_TIME - green_time,
-            "Cycle": CYCLE_TIME,
-            "Base Green": calculate_green_time(cluster_data),
-            "Optimized Congestion": float(best_scores[global_best_idx]),
-            "Optimized Category": get_congestion_category(
-                float(best_scores[global_best_idx])
-            ),
-            "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",
-            "Optimized VPM": cluster_data["VPM Mean"] * (green_time / CYCLE_TIME),
-            "Optimized Speed": cluster_data["Speed Mean"]
-            * (1 + 0.01 * (green_time - T_MIN)),
-            "Optimized Density": cluster_data["Density Mean"]
-            * ((CYCLE_TIME - green_time) / CYCLE_TIME),
-        }
-
-        print(
-            f"\nCluster {cluster} optimized | "
-            f"Green time={green_time:.2f}s | "
-            f"Red time={(CYCLE_TIME - green_time):.2f}s | "
-            f"Original Congestion={cluster_data['Congestion Mean']} | "
-            f"Optimized Congestion={best_scores[global_best_idx]:.2f} | "
-            f"Improvement={(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%"
-        )
-
-    # Display results in tabular format
-    display_optimization_results(pd.DataFrame(results).T, clusters_df)
-    display_optimization_comparison(pd.DataFrame(results).T, clusters_df)
-
     return pd.DataFrame(results).T

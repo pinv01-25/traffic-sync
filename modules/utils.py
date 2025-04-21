@@ -28,28 +28,9 @@ def generate_random_test_cases(n_cases: int) -> list:
     return test_cases
 
 
-def print_section_title(title: str, width: int = 120, underline: str = "="):
-    """
-    Print a centered and stylized title above a table.
-
-    Args:
-        title (str): The title text to display.
-        width (int): Total width to center the title (default is 120 characters).
-        underline (str): Character used for underlining (default is '=').
-
-    Returns:
-        None
-    """
-    centered_title = title.center(width)
-    print(underline * len(centered_title))
-    print("\n" + centered_title + "\n")
-    print(underline * len(centered_title))
-
-
 def consolidate_results(
     sensors: pd.DataFrame,
     result: pd.DataFrame,
-    output_path: str = "consolidated_results.csv",
 ) -> pd.DataFrame:
     """
     Merge optimization results into the sensor-level dataset by matching cluster IDs
@@ -58,8 +39,6 @@ def consolidate_results(
     Args:
         sensors (pd.DataFrame): Original traffic sensor data. Must include a 'cluster' column.
         result (pd.DataFrame): PSO optimization results, indexed by cluster ID.
-        output_path (str): Path to save the resulting CSV file.
-
     Returns:
         pd.DataFrame: Consolidated DataFrame with sensor data and corresponding optimization metrics.
     """
@@ -70,6 +49,4 @@ def consolidate_results(
     # Merge by 'cluster'
     merged = sensors.merge(result_with_index, how="left", on="cluster")
 
-    # Save to CSV
-    merged.to_csv(output_path, index=False)
-    print(f"✅ Consolidated results saved to: {output_path}")
+    return merged
