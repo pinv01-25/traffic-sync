@@ -12,7 +12,7 @@ Functions:
 """
 
 from modules.cluster.clustering import apply_clustering, compute_cluster_stats
-
+import pandas as pd
 # --------------------------------------------------
 # Main Clustering Function
 # --------------------------------------------------
@@ -39,6 +39,27 @@ def hierarchical_clustering(df):
     Returns:
         pd.DataFrame: DataFrame with cluster analysis results.
     """
+    if len(df) == 1:
+        df_single = df.copy()
+        df_single["cluster"] = 1
+
+        stats = pd.DataFrame(
+            [
+                {
+                    "Cluster": 1,
+                    "Expected Mode": "unknown",
+                    "Predicted Mode": df_single["Predicted"].iloc[0],
+                    "Congestion Mean": df_single["value"].iloc[0],
+                    "Congestion Std": 0.0,
+                    "VPM Mean": df_single["VPM"].iloc[0],
+                    "Speed Mean": df_single["Speed (km/h)"].iloc[0],
+                    "Density Mean": df_single["Density (veh/km)"].iloc[0],
+                }
+            ]
+        )
+
+        return stats, df_single
+
     # Apply hierarchical clustering
     clusters, _ = apply_clustering(df)
 
