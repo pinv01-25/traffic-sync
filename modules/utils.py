@@ -66,8 +66,8 @@ def consolidate_results(
 
     for _, row in merged.iterrows():
         optimization = {
-            "version": "1.0",
-            "type": "data",
+            "version": row.get("version", "1.0"),
+            "type": "optimization",
             "timestamp": row.get("timestamp", 0),
             "traffic_light_id": row["traffic_light_id"],
             "controlled_edges": row.get("controlled_edges", []),
