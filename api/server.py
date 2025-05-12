@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import List
 
@@ -84,10 +84,23 @@ def root():
     return FileResponse(os.path.join("app", "index.html"))
 
 
-@app.post("/evaluate", response_model=List[OptimizedTrafficData])
-def evaluate_json(traffic_data: List[TrafficData] = Body(...)):
-    data = [item.dict() for item in traffic_data]
-    return run_pipeline(data)
+@app.post("/evaluate", response_model=OptimizedTrafficData)
+async def evaluate_json(request: Request):
+    try:
+        body = await request.json()
+        traffic_data = TrafficData(**body)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid input format or data: {str(e)}"
+        )
+
+    try:
+        result = run_pipeline([traffic_data.dict()])
+        return result[0]
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Internal pipeline error: {str(e)}"
+        )
 
 
 @app.post("/evaluate/{sensors}", response_model=List[OptimizedTrafficData])
