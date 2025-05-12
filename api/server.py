@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 from modules.fuzzy.evaluation import run_test_cases
 from modules.cluster.evaluation import hierarchical_clustering
@@ -22,19 +22,61 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="app"), name="static")
 
 
-class TestCase(BaseModel):
-    vpm: float
-    spd: float
-    den: float
-    expected: Optional[str] = None
+class TrafficMetrics(BaseModel):
+    vehicles_per_minute: int
+    avg_speed_kmh: float
+    avg_circulation_time_sec: float
+    density: float
 
 
-def run_pipeline(test_data: List[dict]):
-    fuzzy = run_test_cases(test_data)
+class VehicleStats(BaseModel):
+    motorcycle: int
+    car: int
+    bus: int
+    truck: int
+
+
+class TrafficData(BaseModel):
+    version: str
+    type: str = "data"
+    timestamp: int
+    traffic_light_id: str
+    controlled_edges: List[str]
+    metrics: TrafficMetrics
+    vehicle_stats: VehicleStats
+
+
+class TrafficOptimization(BaseModel):
+    cluster: int
+    predicted_category: str
+    congestion: float
+    green_time: float
+    red_time: float
+    optimized_congestion: float
+    optimized_category: str
+    improvement: str
+    optimized_vehicles_per_minute: float
+    optimized_avg_speed_kmh: float
+    optimized_density: float
+
+
+class OptimizedTrafficData(BaseModel):
+    version: str
+    type: str = "data"
+    timestamp: int
+    traffic_light_id: str
+    controlled_edges: List[str]
+    metrics: TrafficMetrics
+    vehicle_stats: VehicleStats
+    optimization: TrafficOptimization
+
+
+def run_pipeline(traffic_data: List[dict]):
+    fuzzy = run_test_cases(traffic_data)
     clusters, sensors = hierarchical_clustering(fuzzy)
     result = pso(clusters)
     final_df = consolidate_results(sensors, result)
-    return final_df.to_dict(orient="records")
+    return final_df
 
 
 @app.get("/")
@@ -42,14 +84,13 @@ def root():
     return FileResponse(os.path.join("app", "index.html"))
 
 
-@app.post("/evaluate")
-def evaluate_json(test_cases: List[TestCase] = Body(...)):
-    test_data = [item.dict() for item in test_cases]
-    results = run_pipeline(test_data)
-    return {"result": results}
+@app.post("/evaluate", response_model=List[OptimizedTrafficData])
+def evaluate_json(traffic_data: List[TrafficData] = Body(...)):
+    data = [item.dict() for item in traffic_data]
+    return run_pipeline(data)
 
 
-@app.post("/evaluate/{sensors}")
+@app.post("/evaluate/{sensors}", response_model=List[OptimizedTrafficData])
 def evaluate_random(sensors: int):
     if sensors <= 0:
         raise HTTPException(
@@ -57,5 +98,4 @@ def evaluate_random(sensors: int):
         )
 
     test_data = generate_random_test_cases(sensors)
-    results = run_pipeline(test_data)
-    return {"result": results}
+    return run_pipeline(test_data)

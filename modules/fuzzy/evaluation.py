@@ -109,18 +109,22 @@ def run_test_cases(json_data):
 
     Args:
         json_data (list[dict]): List of traffic input samples. Each item must contain:
-            - 'vpm': Vehicles per minute
-            - 'spd': Average speed (km/h)
-            - 'den': Vehicle density (veh/km)
-            - 'expected': Expected linguistic congestion category
-
+            - 'traffic_light_id': ID of the traffic light
+            - 'vehicles_per_minute': Vehicles per minute
+            - 'avg_speed_kmh': Average speed (km/h)
+            - 'density': Vehicle density (veh/km)
     Returns:
         pd.DataFrame: DataFrame with fuzzy outputs and membership breakdown.
     """
     results = []
 
     for test in json_data:
-        result = evaluate_congestion(test["vpm"], test["spd"], test["den"])
+        metrics = test["metrics"]
+        vpm = metrics["vehicles_per_minute"]
+        spd = metrics["avg_speed_kmh"]
+        den = metrics["density"]
+
+        result = evaluate_congestion(vpm, spd, den)
 
         membresias_str = " | ".join(
             f"{k}: {v:.2f}" for k, v in result["membership"].items()
@@ -128,16 +132,15 @@ def run_test_cases(json_data):
 
         results.append(
             {
-                "VPM": test["vpm"],
-                "Speed (km/h)": test["spd"],
-                "Density (veh/km)": test["den"],
-                "Expected": test["expected"],
+                "traffic_light_id": test["traffic_light_id"],
+                "VPM": vpm,
+                "Speed (km/h)": spd,
+                "Density (veh/km)": den,
+                "Expected": "unknown",  # now optional or unused
                 "Predicted": result["category"],
                 "value": round(result["value"], 2),
                 "Memberships": membresias_str,
             }
         )
 
-    df_results = pd.DataFrame(results)
-
-    return df_results
+    return pd.DataFrame(results)
