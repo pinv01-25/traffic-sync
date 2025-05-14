@@ -65,41 +65,22 @@ def consolidate_results(
     response = []
 
     for _, row in merged.iterrows():
-        optimization = {
-            "version": row.get("version", "1.0"),
+        optimization_dict = {
+            "version": row["version"],
             "type": "optimization",
-            "timestamp": row.get("timestamp", 0),
+            "timestamp": row["timestamp"],
             "traffic_light_id": row["traffic_light_id"],
-            "controlled_edges": row.get("controlled_edges", []),
-            "metrics": {
-                "vehicles_per_minute": int(row["VPM"]),
-                "avg_speed_kmh": float(row["Speed (km/h)"]),
-                "avg_circulation_time_sec": float(
-                    row.get("avg_circulation_time_sec", 30.0)
-                ),
-                "density": float(row["Density (veh/km)"]),
-            },
-            "vehicle_stats": {
-                "motorcycle": int(row.get("motorcycle", 0)),
-                "car": int(row.get("car", 0)),
-                "bus": int(row.get("bus", 0)),
-                "truck": int(row.get("truck", 0)),
-            },
             "optimization": {
-                "cluster": int(row["cluster"]),
-                "predicted_category": row["Predicted"],
-                "congestion": float(row["value"]),
-                "green_time": float(row["Green"]),
-                "red_time": float(row["Red"]),
-                "optimized_congestion": float(row["Optimized Congestion"]),
+                "green_time_sec": int(row["Green"]),
+                "red_time_sec": int(row["Red"]),
+            },
+            "impact": {
+                "original_congestion": int(row["value"]),
+                "optimized_congestion": int(row["Optimized Congestion"]),
+                "original_category": row["Predicted"],
                 "optimized_category": row["Optimized Category"],
-                "improvement": row["Improvement"],
-                "optimized_vehicles_per_minute": float(row["Optimized VPM"]),
-                "optimized_avg_speed_kmh": float(row["Optimized Speed"]),
-                "optimized_density": float(row["Optimized Density"]),
             },
         }
-
-        response.append(optimization)
+        response.append(optimization_dict)
 
     return response

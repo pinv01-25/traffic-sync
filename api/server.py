@@ -10,6 +10,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
+import logging
+import json
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+logger = logging.getLogger("traffic_sync")
 
 app = FastAPI(title="Traffic Sensor Analysis API")
 app.add_middleware(
@@ -39,43 +47,39 @@ class VehicleStats(BaseModel):
 class TrafficData(BaseModel):
     version: str
     type: str = "data"
-    timestamp: int
+    timestamp: str
     traffic_light_id: str
     controlled_edges: List[str]
     metrics: TrafficMetrics
     vehicle_stats: VehicleStats
 
 
-class TrafficOptimization(BaseModel):
-    cluster: int
-    predicted_category: str
-    congestion: float
-    green_time: float
-    red_time: float
-    optimized_congestion: float
+class OptimizationDetails(BaseModel):
+    green_time_sec: int
+    red_time_sec: int
+
+class ImpactDetails(BaseModel):
+    original_congestion: int
+    optimized_congestion: int
+    original_category: str
     optimized_category: str
-    improvement: str
-    optimized_vehicles_per_minute: float
-    optimized_avg_speed_kmh: float
-    optimized_density: float
 
-
-class OptimizedTrafficData(BaseModel):
+class OptimizationData(BaseModel):
     version: str
-    type: str = "data"
-    timestamp: int
+    type: str = "optimization"
+    timestamp: str
     traffic_light_id: str
-    controlled_edges: List[str]
-    metrics: TrafficMetrics
-    vehicle_stats: VehicleStats
-    optimization: TrafficOptimization
+    optimization: OptimizationDetails
+    impact: ImpactDetails
 
 
 def run_pipeline(traffic_data: List[dict]):
+    logger.info("Running traffic pipeline...")
     fuzzy = run_test_cases(traffic_data)
     clusters, sensors = hierarchical_clustering(fuzzy)
     result = pso(clusters)
     final_df = consolidate_results(sensors, result)
+    logger.info("Pipeline completed successfully.")
     return final_df
 
 
@@ -84,26 +88,32 @@ def root():
     return FileResponse(os.path.join("app", "index.html"))
 
 
-@app.post("/evaluate", response_model=OptimizedTrafficData)
+@app.post("/evaluate", response_model=OptimizationData)
 async def evaluate_json(request: Request):
     try:
         body = await request.json()
+        logger.info("Received /evaluate request:\n%s", json.dumps(body, indent=2))
         traffic_data = TrafficData(**body)
+        logger.info("Payload validated successfully.")
     except Exception as e:
+        logger.exception("Validation error")
         raise HTTPException(
             status_code=400, detail=f"Invalid input format or data: {str(e)}"
         )
 
     try:
+        logger.info("Starting optimization pipeline for traffic_light_id=%s", traffic_data.traffic_light_id)
         result = run_pipeline([traffic_data.dict()])
+        logger.info("Optimization result: %s", json.dumps(result[0], indent=2))
         return result[0]
     except Exception as e:
+        logger.error("Pipeline error: %s", str(e))
         raise HTTPException(
             status_code=500, detail=f"Internal pipeline error: {str(e)}"
         )
 
 
-@app.post("/evaluate/{sensors}", response_model=List[OptimizedTrafficData])
+@app.post("/evaluate/{sensors}", response_model=List[OptimizationData])
 def evaluate_random(sensors: int):
     if sensors <= 0:
         raise HTTPException(

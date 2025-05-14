@@ -123,6 +123,13 @@ def run_test_cases(json_data):
         vpm = metrics["vehicles_per_minute"]
         spd = metrics["avg_speed_kmh"]
         den = metrics["density"]
+        cir = metrics["avg_circulation_time_sec"]
+
+        vehicle_stats = test["vehicle_stats"]
+        motorcycle = vehicle_stats["motorcycle"]
+        car = vehicle_stats["car"]
+        bus = vehicle_stats["bus"]
+        truck = vehicle_stats["truck"]
 
         result = evaluate_congestion(vpm, spd, den)
 
@@ -132,10 +139,19 @@ def run_test_cases(json_data):
 
         results.append(
             {
+                "version": test["version"],
+                "type": test["type"],
+                "timestamp": test["timestamp"],
                 "traffic_light_id": test["traffic_light_id"],
+                "controlled_edges": test["controlled_edges"],
                 "VPM": vpm,
                 "Speed (km/h)": spd,
+                "avg_circulation_time_sec": cir,
                 "Density (veh/km)": den,
+                "motorcycle": motorcycle,
+                "car": car,
+                "bus": bus,
+                "truck": truck,
                 "Expected": "unknown",  # now optional or unused
                 "Predicted": result["category"],
                 "value": round(result["value"], 2),
