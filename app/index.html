@@ -11,6 +11,12 @@
       rel="stylesheet"
     />
 
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
     <!-- Bootstrap Table -->
     <link
       rel="stylesheet"
@@ -22,110 +28,8 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <style>
-      :root {
-        --bg-dark: #121212;
-        --bg-light: #1e1e1e;
-        --text-light: #e0e0e0;
-        --text-muted: #999;
-        --accent: #0dcaf0;
-      }
-
-      body {
-        background-color: var(--bg-dark);
-        color: var(--text-light);
-        font-family: "Segoe UI", sans-serif;
-        padding: 1rem;
-      }
-
-      h1,
-      h2 {
-        font-weight: 600;
-      }
-
-      .section {
-        background-color: var(--bg-light);
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-      }
-
-      .form-control,
-      .input-group-text {
-        background-color: #2a2a2a;
-        color: var(--text-light);
-        border: 1px solid #444;
-      }
-
-      .form-control::placeholder {
-        color: var(--text-muted);
-      }
-
-      .btn {
-        border-radius: 6px;
-      }
-
-      .table,
-      .table th,
-      .table td {
-        color: var(--text-light);
-        background-color: #202020;
-      }
-
-      .table thead {
-        background-color: #292929;
-      }
-
-      .btn-outline-accent {
-        color: var(--accent);
-        border-color: var(--accent);
-      }
-
-      .btn-outline-accent:hover {
-        background-color: var(--accent);
-        color: #000;
-      }
-
-      .chart-container {
-        position: relative;
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-      }
-      canvas {
-        width: 100% !important;
-        height: auto !important;
-      }
-
-      .bootstrap-table .search input {
-        background-color: #333;
-        color: #fff;
-        border-color: #444;
-      }
-
-      .bootstrap-table .search input::placeholder {
-        color: #fff;
-      }
-
-      .pagination li.active a,
-      .pagination li.active a:hover,
-      .pagination li.active a:focus {
-        background-color: #555;
-        border-color: #666;
-        color: #fff;
-      }
-
-      .pagination li a {
-        background-color: #333;
-        color: #fff;
-        border-color: #444;
-      }
-
-      .pagination li a:hover {
-        background-color: #555;
-      }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
   </head>
   <body>
     <div class="container">
@@ -134,60 +38,132 @@
       <!-- Manual Input Section -->
       <div class="section">
         <h2 class="mb-4 text-center text-md-start">Manual Data Entry</h2>
-        <div class="d-grid gap-3 d-md-flex">
-          <div class="input-group">
-            <input
-              type="number"
-              class="form-control"
-              id="inputVPM"
-              placeholder="VPM"
-            />
-            <span class="input-group-text">veh/min</span>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                id="inputTrafficLightId"
+                placeholder="Traffic Light ID"
+                value="TL001"
+              />
+              <span class="input-group-text">ID</span>
+            </div>
           </div>
-          <div class="input-group">
-            <input
-              type="number"
-              class="form-control"
-              id="inputSpeed"
-              placeholder="Speed"
-            />
-            <span class="input-group-text">km/h</span>
+          <div class="col-md-6">
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                id="inputControlledEdges"
+                placeholder="Controlled Edges"
+                value="edge1,edge2,edge3"
+              />
+              <span class="input-group-text">Edges</span>
+            </div>
           </div>
-          <div class="input-group">
-            <input
-              type="number"
-              class="form-control"
-              id="inputDensity"
-              placeholder="Density"
-            />
-            <span class="input-group-text">veh/km</span>
+        </div>
+        
+        <div class="row g-3 mt-2">
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputVehiclesPerMinute"
+                placeholder="Vehicles per Minute"
+              />
+              <span class="input-group-text">veh/min</span>
+            </div>
           </div>
-          <button class="btn btn-success w-100 w-md-auto" onclick="addInput()">
-            Add Entry
-          </button>
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputAvgSpeed"
+                placeholder="Average Speed"
+                step="0.1"
+              />
+              <span class="input-group-text">km/h</span>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputCirculationTime"
+                placeholder="Circulation Time"
+              />
+              <span class="input-group-text">sec</span>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputDensity"
+                placeholder="Density"
+                step="0.1"
+              />
+              <span class="input-group-text">veh/km</span>
+            </div>
+          </div>
         </div>
 
-        <div class="table-responsive mt-4">
-          <table
-            class="table table-dark table-striped table-bordered table-sm"
-            id="inputTable"
-          >
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>VPM</th>
-                <th>Speed</th>
-                <th>Density</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="row g-3 mt-2">
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputMotorcycle"
+                placeholder="Motorcycles"
+              />
+              <span class="input-group-text">Motorcycles</span>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputCar"
+                placeholder="Cars"
+              />
+              <span class="input-group-text">Cars</span>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputBus"
+                placeholder="Buses"
+              />
+              <span class="input-group-text">Buses</span>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="inputTruck"
+                placeholder="Trucks"
+              />
+              <span class="input-group-text">Trucks</span>
+            </div>
+          </div>
         </div>
 
-        <div class="text-end">
+        <div class="text-end mt-3">
           <button
-            class="btn btn-primary mt-2 w-100 w-sm-auto"
+            class="btn btn-primary w-100 w-sm-auto"
             onclick="evaluateManual()"
           >
             Send to /evaluate
@@ -258,8 +234,88 @@
       <!-- Charts Section -->
       <div id="chartsSection" class="section" style="display: none">
         <h2>📊 Charts</h2>
-        <div class="chart-container">
-          <canvas id="resultsChart">Applying fuzzy logic...</canvas>
+        
+        <!-- Chart Type Selector -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="chartType" id="chartBar" value="bar" checked>
+              <label class="btn btn-outline-accent" for="chartBar">Bar Chart</label>
+              
+              <input type="radio" class="btn-check" name="chartType" id="chartLine" value="line">
+              <label class="btn btn-outline-accent" for="chartLine">Line Chart</label>
+              
+              <input type="radio" class="btn-check" name="chartType" id="chartPie" value="pie">
+              <label class="btn btn-outline-accent" for="chartPie">Improvement Distribution</label>
+              
+              <input type="radio" class="btn-check" name="chartType" id="chartStacked" value="stacked">
+              <label class="btn btn-outline-accent" for="chartStacked">Traffic Light Times</label>
+              
+              <input type="radio" class="btn-check" name="chartType" id="chartScatter" value="scatter">
+              <label class="btn btn-outline-accent" for="chartScatter">Correlation Analysis</label>
+              
+              <input type="radio" class="btn-check" name="chartType" id="chartComparison" value="comparison">
+              <label class="btn btn-outline-accent" for="chartComparison">Before/After</label>
+              
+              <input type="radio" class="btn-check" name="chartType" id="chartImprovement" value="improvement">
+              <label class="btn btn-outline-accent" for="chartImprovement">Improvement %</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Chart Container -->
+        <div class="chart-container mb-4" style="height: 500px; position: relative;">
+          <canvas id="resultsChart" style="max-height: 500px !important;">Applying fuzzy logic...</canvas>
+        </div>
+
+        <!-- Additional Metrics Cards -->
+        <div class="container my-4">
+          <div id="metricsCards" class="row g-3">
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="card bg-dark text-light metrics-card">
+                <div class="card-body text-center">
+                  <div class="metrics-icon">
+                    <i class="bi bi-graph-down-arrow"></i>
+                  </div>
+                  <h6 class="card-title text-muted mb-2">Avg Congestion Reduction</h6>
+                  <h3 class="text-success mb-0" id="avgReduction">65.3%</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="card bg-dark text-light metrics-card">
+                <div class="card-body text-center">
+                  <div class="metrics-icon">
+                    <i class="bi bi-trophy"></i>
+                  </div>
+                  <h6 class="card-title text-muted mb-2">Best Improvement</h6>
+                  <h3 class="text-info mb-0" id="bestImprovement">80.0%</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="card bg-dark text-light metrics-card">
+                <div class="card-body text-center">
+                  <div class="metrics-icon">
+                    <i class="bi bi-clock"></i>
+                  </div>
+                  <h6 class="card-title text-muted mb-2">Avg Green Time</h6>
+                  <h3 class="text-warning mb-0" id="avgGreenTime">52s</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="card bg-dark text-light metrics-card">
+                <div class="card-body text-center">
+                  <div class="metrics-icon">
+                    <i class="bi bi-gear"></i>
+                  </div>
+                  <h6 class="card-title text-muted mb-2">Optimized Sensors</h6>
+                  <h3 class="text-primary mb-0" id="optimizedSensors">22</h3>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -276,157 +332,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPDF-AutoTable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.core.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin/tableExport.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/main.js"></script>
   </body>
-
-  <script>
-    const manualData = [];
-    let latestResults = [];
-    const loadingMessages = [
-      "Applying fuzzy logic...",
-      "Applying hierarchical clustering...",
-      "Applying particle swarm optimization...",
-    ];
-    let loadingInterval = null;
-    let messageIndex = 0;
-
-    function showLoading() {
-      document.getElementById("loadingSection").style.display = "block";
-      document.getElementById("resultsSection").style.display = "none";
-      document.getElementById("chartsSection").style.display = "none";
-      loadingInterval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % loadingMessages.length;
-        document.getElementById("loadingMessage").innerText =
-          loadingMessages[messageIndex];
-      }, 2000);
-    }
-
-    function hideLoading() {
-      clearInterval(loadingInterval);
-      document.getElementById("loadingSection").style.display = "none";
-    }
-
-    function addInput() {
-      const vpm = parseFloat(document.getElementById("inputVPM").value);
-      const spd = parseFloat(document.getElementById("inputSpeed").value);
-      const den = parseFloat(document.getElementById("inputDensity").value);
-
-      if (isNaN(vpm) || isNaN(spd) || isNaN(den)) {
-        alert("Please fill in all fields with valid numbers.");
-        return;
-      }
-
-      manualData.push({ vpm, spd, den });
-      updateInputTable();
-      document.getElementById("inputVPM").value = "";
-      document.getElementById("inputSpeed").value = "";
-      document.getElementById("inputDensity").value = "";
-    }
-
-    function updateInputTable() {
-      const tbody = document.querySelector("#inputTable tbody");
-      tbody.innerHTML = "";
-      manualData.forEach((item, index) => {
-        tbody.innerHTML += `
-            <tr>
-              <td>${index + 1}</td>
-              <td>${item.vpm}</td>
-              <td>${item.spd}</td>
-              <td>${item.den}</td>
-              <td><button class="btn btn-sm btn-danger" onclick="removeInput(${index})">Delete</button></td>
-            </tr>`;
-      });
-    }
-
-    function removeInput(index) {
-      manualData.splice(index, 1);
-      updateInputTable();
-    }
-
-    async function evaluateManual() {
-      if (manualData.length === 0) {
-        alert("Add at least one entry to evaluate.");
-        return;
-      }
-
-      showLoading();
-      const res = await fetch("/evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(manualData),
-      });
-
-      const json = await res.json();
-      showResults(json.result || json);
-    }
-
-    async function evaluateRandom() {
-      const sensors = parseInt(document.getElementById("sensors").value);
-      if (isNaN(sensors) || sensors <= 0) {
-        alert("Enter a valid number of sensors.");
-        return;
-      }
-
-      showLoading();
-      const res = await fetch(`/evaluate/${sensors}`, { method: "POST" });
-      const json = await res.json();
-      showResults(json.result || json);
-    }
-
-    function showResults(data) {
-      hideLoading();
-      latestResults = data;
-
-      document.getElementById("resultsSection").style.display = "block";
-      document.getElementById("chartsSection").style.display = "block";
-
-      const columns = Object.keys(data[0]).map((key) => ({
-        field: key,
-        title: key,
-        sortable: true,
-      }));
-
-      $("#resultTable").bootstrapTable("destroy").bootstrapTable({
-        columns,
-        data,
-      });
-
-      const labels = data.map((_, i) => `Sensor ${i + 1}`);
-      const datasets = [
-        { label: "VPM", data: data.map((d) => d["VPM"]) },
-        { label: "Optimized VPM", data: data.map((d) => d["Optimized VPM"]) },
-        { label: "Speed", data: data.map((d) => d["Speed (km/h)"]) },
-        {
-          label: "Optimized Speed",
-          data: data.map((d) => d["Optimized Speed"]),
-        },
-        { label: "Density", data: data.map((d) => d["Density (veh/km)"]) },
-        {
-          label: "Optimized Density",
-          data: data.map((d) => d["Optimized Density"]),
-        },
-      ];
-
-      if (window.myChart) window.myChart.destroy();
-      const ctx = document.getElementById("resultsChart").getContext("2d");
-      window.myChart = new Chart(ctx, {
-        type: "bar",
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { labels: { color: "#ddd" } },
-            title: {
-              display: true,
-              text: "Original vs Optimized Metrics",
-              color: "#fff",
-            },
-          },
-          scales: {
-            x: { ticks: { color: "#aaa" } },
-            y: { ticks: { color: "#aaa" }, beginAtZero: true },
-          },
-        },
-      });
-    }
-  </script>
 </html>

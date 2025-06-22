@@ -20,7 +20,7 @@ def generate_random_test_cases(n_cases: int) -> list:
         case = {
             "version": "1.0",
             "type": "data",
-            "timestamp": int(datetime.now(timezone.utc).timestamp()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "traffic_light_id": f"TL-{1000 + i}",
             "controlled_edges": [f"E{i}-{j}" for j in range(1, 4)],
             "metrics": {
@@ -65,10 +65,15 @@ def consolidate_results(
     response = []
 
     for _, row in merged.iterrows():
+        # Convert timestamp to string if it's not already
+        timestamp = row["timestamp"]
+        if isinstance(timestamp, (int, float)):
+            timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+        
         optimization_dict = {
             "version": row["version"],
             "type": "optimization",
-            "timestamp": row["timestamp"],
+            "timestamp": timestamp,
             "traffic_light_id": row["traffic_light_id"],
             "optimization": {
                 "green_time_sec": int(row["Green"]),

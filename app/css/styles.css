@@ -1,0 +1,163 @@
+:root {
+  --bg-dark: #121212;
+  --bg-light: #1e1e1e;
+  --text-light: #e0e0e0;
+  --text-muted: #999;
+  --accent: #0dcaf0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  font-family: "Segoe UI", sans-serif;
+  padding: 1rem;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+}
+
+.section {
+  background-color: var(--bg-light);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.form-control,
+.input-group-text {
+  background-color: #2a2a2a;
+  color: var(--text-light);
+  border: 1px solid #444;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.btn {
+  border-radius: 6px;
+}
+
+.table,
+.table th,
+.table td {
+  color: var(--text-light);
+  background-color: #202020;
+}
+
+.table thead {
+  background-color: #292929;
+}
+
+.btn-outline-accent {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-outline-accent:hover {
+  background-color: var(--accent);
+  color: #000;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+
+.bootstrap-table .search input {
+  background-color: #333;
+  color: #fff;
+  border-color: #444;
+}
+
+.bootstrap-table .search input::placeholder {
+  color: #fff;
+}
+
+.pagination li.active a,
+.pagination li.active a:hover,
+.pagination li.active a:focus {
+  background-color: #555;
+  border-color: #666;
+  color: #fff;
+}
+
+.pagination li a {
+  background-color: #333;
+  color: #fff;
+  border-color: #444;
+}
+
+.pagination li a:hover {
+  background-color: #555;
+}
+
+/* Metrics Cards Styles */
+.metrics-card {
+  border: 1px solid #333;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metrics-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  border-color: var(--accent);
+}
+
+.metrics-card .card-body {
+  padding: 1.5rem;
+  width: 100%;
+}
+
+.metrics-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.8;
+}
+
+.metrics-card .card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #fff !important;
+}
+
+.metrics-card h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff !important;
+}
+
+/* Icon colors */
+.metrics-card .bi-graph-down-arrow {
+  color: #28a745;
+}
+
+.metrics-card .bi-trophy {
+  color: #17a2b8;
+}
+
+.metrics-card .bi-clock {
+  color: #ffc107;
+}
+
+.metrics-card .bi-gear {
+  color: #007bff;
+} 
