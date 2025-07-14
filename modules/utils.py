@@ -45,6 +45,7 @@ def generate_random_test_cases(n_cases: int) -> list:
 def consolidate_results(
     sensors: pd.DataFrame,
     result: pd.DataFrame,
+    timestamp: str = None,
 ) -> list:
     """
     Merge optimization results into the sensor-level dataset by matching cluster IDs,
@@ -53,6 +54,7 @@ def consolidate_results(
     Args:
         sensors (pd.DataFrame): Sensor data with traffic metrics and vehicle stats.
         result (pd.DataFrame): Optimization results with cluster IDs and metrics.
+        timestamp (str): Optional timestamp to use for all results.
     Returns:
         list: List of structured optimization dictionaries.
     """
@@ -65,15 +67,13 @@ def consolidate_results(
     response = []
 
     for _, row in merged.iterrows():
-        # Convert timestamp to string if it's not already
-        timestamp = row["timestamp"]
-        if isinstance(timestamp, (int, float)):
-            timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+        # Use provided timestamp or existing timestamp (already in ISO format from control service)
+        result_timestamp = timestamp if timestamp else row["timestamp"]
         
         optimization_dict = {
             "version": row["version"],
             "type": "optimization",
-            "timestamp": timestamp,
+            "timestamp": result_timestamp,
             "traffic_light_id": row["traffic_light_id"],
             "optimization": {
                 "green_time_sec": int(row["Green"]),
