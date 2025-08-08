@@ -13,7 +13,9 @@ traffic-sync/
 ├── api/                    # FastAPI backend
 │   └── server.py           # RESTful API logic
 ├── app/                    # Web frontend (HTML+JS)
-│   └── index.html          # Dashboard interface
+│   ├── index.html          # Dashboard interface
+│   ├── css/                # Stylesheets
+│   └── js/                 # JavaScript files
 └── modules/                # Core logic
     ├── utils.py            # Results consolidation
     ├── cluster/            # Clustering logic
@@ -24,13 +26,17 @@ traffic-sync/
 ## Getting Started
 
 Install Dependencies
+
 ```python
 pip install -r requirements.txt
 ```
+
 Run the API Server
+
 ```bash
 ./run.sh
 ```
+
 Visit: http://localhost:8002
 
 ---
@@ -42,6 +48,7 @@ Visit: http://localhost:8002
 Evaluates traffic data and returns optimization results. Handles batches of 1-10 sensors.
 
 **Request Body (Batch Format):**
+
 ```json
 {
   "version": "2.0",
@@ -68,24 +75,25 @@ Evaluates traffic data and returns optimization results. Handles batches of 1-10
     {
       "traffic_light_id": "07",
       "controlled_edges": ["edge12", "edge08", "edge03"],
-  "metrics": {
+      "metrics": {
         "vehicles_per_minute": 28,
         "avg_speed_kmh": 42.1,
         "avg_circulation_time_sec": 18,
         "density": 0.31
-  },
-  "vehicle_stats": {
+      },
+      "vehicle_stats": {
         "motorcycle": 18,
         "car": 52,
         "bus": 2,
         "truck": 8
-  }
+      }
     }
   ]
 }
 ```
 
 **Response (Batch Format):**
+
 ```json
 {
   "version": "2.0",
@@ -99,16 +107,16 @@ Evaluates traffic data and returns optimization results. Handles batches of 1-10
       "timestamp": "2025-07-14T00:33:55Z",
       "traffic_light_id": "03",
       "cluster_sensors": ["03", "07"],
-  "optimization": {
+      "optimization": {
         "green_time_sec": 14,
         "red_time_sec": 75
-  },
-  "impact": {
+      },
+      "impact": {
         "original_congestion": 4,
         "optimized_congestion": 1,
         "original_category": "mild",
         "optimized_category": "none"
-  }
+      }
     }
   ]
 }
@@ -123,17 +131,20 @@ Health check endpoint.
 ## Architecture
 
 ### Fuzzy Logic (modules/fuzzy)
+
 - Mamdani inference system
 - Inputs: VPM, Speed, Density
 - Output: Congestion (none, mild, severe)
 - 27 predefined rules
 
 ### Clustering (modules/cluster)
+
 - Hierarchical clustering (Ward + Euclidean)
 - Groups sensors by congestion output
 - Handles single sensor cases
 
 ### Optimization (modules/pso)
+
 - Particle Swarm Optimization
 - 20 particles, 50 iterations
 - Minimizes congestion by tuning green time
@@ -151,6 +162,7 @@ The service processes batches of 1-10 sensors through the following pipeline:
 4. **Response**: Returns one optimization per cluster formed
 
 **Key Features:**
+
 - **Gas Efficient**: Single JSON input/output reduces smart contract interactions
 - **Clustering**: Automatically groups similar sensors for coordinated optimization
 - **Scalable**: Handles 1-10 sensors in a single request
@@ -171,6 +183,7 @@ This service is designed to be **optimization-focused** and **validation-light**
 ## Integration
 
 The sync service is designed to work with the **traffic-control** service, which handles:
+
 - Input validation
 - Data storage
 - Error handling
