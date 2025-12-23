@@ -10,7 +10,7 @@ Functions:
     - compute_cluster_stats: Compute summary statistics per cluster.
 """
 
-from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.cluster.hierarchy import fcluster, linkage
 
 # --------------------------------------------------
 # Clustering Parameters

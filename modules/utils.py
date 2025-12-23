@@ -1,7 +1,8 @@
 import random
-from modules.fuzzy.system import VEHICLE_RANGE, SPEED_RANGE, DENSITY_RANGE
-import pandas as pd
 from datetime import datetime, timezone
+
+import pandas as pd
+from modules.fuzzy.system import DENSITY_RANGE, SPEED_RANGE, VEHICLE_RANGE
 
 
 def generate_random_test_cases(n_cases: int) -> list:
@@ -27,8 +28,7 @@ def generate_random_test_cases(n_cases: int) -> list:
                 "vehicles_per_minute": int(random.choice(VEHICLE_RANGE)),
                 "avg_speed_kmh": float(random.choice(SPEED_RANGE)),
                 "avg_circulation_time_sec": round(random.uniform(20.0, 60.0), 1),
-                "density": float(random.choice(DENSITY_RANGE))
-                / 10.0,  # simulate decimal densities
+                "density": float(random.choice(DENSITY_RANGE)) / 10.0,  # simulate decimal densities
             },
             "vehicle_stats": {
                 "motorcycle": random.randint(0, 5),
@@ -69,7 +69,7 @@ def consolidate_results(
     for _, row in merged.iterrows():
         # Use provided timestamp or existing timestamp (already in ISO format from control service)
         result_timestamp = timestamp if timestamp else row["timestamp"]
-        
+
         optimization_dict = {
             "version": row["version"],
             "type": "optimization",

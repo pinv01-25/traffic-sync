@@ -11,8 +11,9 @@ Functions:
     - run_clustering_test: Run a test dataset through the clustering pipeline
 """
 
-from modules.cluster.clustering import apply_clustering, compute_cluster_stats
 import pandas as pd
+from modules.cluster.clustering import apply_clustering, compute_cluster_stats
+
 # --------------------------------------------------
 # Main Clustering Function
 # --------------------------------------------------

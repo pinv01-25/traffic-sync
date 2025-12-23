@@ -10,7 +10,7 @@ Functions:
     - fitness_function: Compute congestion level based on PSO particle and fuzzy logic.
 """
 
-from modules.fuzzy.system import simulator, VEHICLE_RANGE, DENSITY_RANGE, SPEED_RANGE
+from modules.fuzzy.system import DENSITY_RANGE, SPEED_RANGE, VEHICLE_RANGE, simulator
 
 # --------------------------------------------------
 # Optimization Parameters

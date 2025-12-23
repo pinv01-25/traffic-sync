@@ -9,10 +9,9 @@ Functions:
     - run_test_cases: Evaluates a set of test cases and prints the results in table format.
 """
 
-from modules.fuzzy.system import simulator, congestion
-import skfuzzy as fuzz
 import pandas as pd
-
+import skfuzzy as fuzz
+from modules.fuzzy.system import congestion, simulator
 
 # --------------------------------------------------
 # Evaluation functions
@@ -49,20 +48,18 @@ def evaluate_congestion(vpm, spd, den):
         simulator.compute()
         value = simulator.output["congestion"]
 
-        m_ninguna = fuzz.interp_membership(
-            congestion.universe, congestion["none"].mf, value
-        )
-        m_leve = fuzz.interp_membership(
-            congestion.universe, congestion["mild"].mf, value
-        )
-        m_severa = fuzz.interp_membership(
-            congestion.universe, congestion["severe"].mf, value
-        )
+        m_ninguna = fuzz.interp_membership(congestion.universe, congestion["none"].mf, value)
+        m_leve = fuzz.interp_membership(congestion.universe, congestion["mild"].mf, value)
+        m_severa = fuzz.interp_membership(congestion.universe, congestion["severe"].mf, value)
 
         return {
             "value": round(value, 2),
             "category": max(
-                zip([m_ninguna, m_leve, m_severa], ["none", "mild", "severe"])
+                zip(
+                    [m_ninguna, m_leve, m_severa],
+                    ["none", "mild", "severe"],
+                    strict=False,
+                )
             )[1],
             "membership": {
                 "none": round(m_ninguna, 2),
@@ -84,15 +81,17 @@ def get_congestion_category(value):
     Returns:
         str: Linguistic category ('none', 'mild', or 'severe').
     """
-    m_ninguna = fuzz.interp_membership(
-        congestion.universe, congestion["none"].mf, value
-    )
+    m_ninguna = fuzz.interp_membership(congestion.universe, congestion["none"].mf, value)
     m_leve = fuzz.interp_membership(congestion.universe, congestion["mild"].mf, value)
-    m_severa = fuzz.interp_membership(
-        congestion.universe, congestion["severe"].mf, value
-    )
+    m_severa = fuzz.interp_membership(congestion.universe, congestion["severe"].mf, value)
 
-    return max(zip([m_ninguna, m_leve, m_severa], ["none", "mild", "severe"]))[1]
+    return max(
+        zip(
+            [m_ninguna, m_leve, m_severa],
+            ["none", "mild", "severe"],
+            strict=False,
+        )
+    )[1]
 
 
 # --------------------------------------------------
@@ -133,9 +132,7 @@ def run_test_cases(json_data):
 
         result = evaluate_congestion(vpm, spd, den)
 
-        membresias_str = " | ".join(
-            f"{k}: {v:.2f}" for k, v in result["membership"].items()
-        )
+        membresias_str = " | ".join(f"{k}: {v:.2f}" for k, v in result["membership"].items())
 
         results.append(
             {

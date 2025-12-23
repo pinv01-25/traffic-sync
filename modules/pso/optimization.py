@@ -15,8 +15,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from modules.fuzzy.evaluation import get_congestion_category
-from modules.pso.fitness import fitness_function, calculate_green_time
-from modules.pso.fitness import T_MIN, CYCLE_TIME
+from modules.pso.fitness import CYCLE_TIME, T_MIN, calculate_green_time, fitness_function
 
 # --------------------------------------------------
 # PSO Configuration Parameters
@@ -63,7 +62,7 @@ def pso(clusters_df):
     in poor local minima.
 
     Args:
-        clusters_df (pd.DataFrame): DataFrame containing per-cluster traffic metrics. Required columns:
+        clusters_df (pd.DataFrame): DataFrame containing per-cluster traffic metrics. Required columns:  # noqa: E501
             - 'Cluster'
             - 'VPM Mean'
             - 'Speed Mean'
@@ -80,7 +79,7 @@ def pso(clusters_df):
             - Base Green: Initial green time estimated by traffic formula
             - Optimized Congestion: Congestion level from fuzzy output
             - Optimized Category: Linguistic category of congestion
-    """
+    """  # noqa: E501
     # Dictionary to store optimization results per cluster
     results = {}
 
@@ -98,9 +97,7 @@ def pso(clusters_df):
 
         # Evaluate fitness of initial particles in parallel
         best_scores = np.array(
-            Parallel(n_jobs=-1)(
-                delayed(fitness_function)(p, cluster_data) for p in particles
-            )
+            Parallel(n_jobs=-1)(delayed(fitness_function)(p, cluster_data) for p in particles)
         )
 
         # Determine global best solution
@@ -121,14 +118,10 @@ def pso(clusters_df):
                     + C1 * r1 * (best_positions[i] - particles[i])
                     + C2 * r2 * (global_best - particles[i])
                 )
-                particles[i] = np.clip(
-                    particles[i] + velocities[i], T_MIN, CYCLE_TIME - 20
-                )
+                particles[i] = np.clip(particles[i] + velocities[i], T_MIN, CYCLE_TIME - 20)
             # Re-evaluate fitness after updates
             scores = np.array(
-                Parallel(n_jobs=-1)(
-                    delayed(fitness_function)(p, cluster_data) for p in particles
-                )
+                Parallel(n_jobs=-1)(delayed(fitness_function)(p, cluster_data) for p in particles)
             )
 
             for i in range(PARTICLES):
@@ -150,9 +143,7 @@ def pso(clusters_df):
             # Restart particles if stuck in poor minima
             if no_improvement >= PATIENCE:
                 if best_scores[global_best_idx] > 5:
-                    restart_idx = np.random.choice(
-                        PARTICLES, size=PARTICLES // 5, replace=False
-                    )
+                    restart_idx = np.random.choice(PARTICLES, size=PARTICLES // 5, replace=False)
                     for idx in restart_idx:
                         particles[idx] = np.random.normal(loc=base_green, scale=10.0)
                         particles[idx] = np.clip(particles[idx], T_MIN, CYCLE_TIME - 20)
@@ -171,13 +162,10 @@ def pso(clusters_df):
             "Cycle": CYCLE_TIME,
             "Base Green": base_green,
             "Optimized Congestion": float(best_scores[global_best_idx]),
-            "Optimized Category": get_congestion_category(
-                float(best_scores[global_best_idx])
-            ),
-            "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",
+            "Optimized Category": get_congestion_category(float(best_scores[global_best_idx])),
+            "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",  # noqa: E501
             "Optimized VPM": cluster_data["VPM Mean"] * (green_time / CYCLE_TIME),
-            "Optimized Speed": cluster_data["Speed Mean"]
-            * (1 + 0.01 * (green_time - T_MIN)),
+            "Optimized Speed": cluster_data["Speed Mean"] * (1 + 0.01 * (green_time - T_MIN)),
             "Optimized Density": cluster_data["Density Mean"]
             * ((CYCLE_TIME - green_time) / CYCLE_TIME),
         }

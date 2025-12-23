@@ -4,8 +4,8 @@ It includes the input and output variables, their membership functions, and the 
 """
 
 import numpy as np
-from skfuzzy import control as ctrl
 import skfuzzy as fuzz
+from skfuzzy import control as ctrl
 
 # --------------------------------------------------
 # Ranges
