@@ -58,11 +58,23 @@ def consolidate_results(
     Returns:
         list: List of structured optimization dictionaries.
     """
+    # Work on copies to avoid mutating original inputs
+    sensors_copy = sensors.copy()
     result_with_index = result.copy()
+
+    # Ensure there is an explicit 'cluster' column in the result DataFrame
+    # instead of relying on the index name, and normalize dtypes to int64
     result_with_index.index.name = "cluster"
+    result_with_index = result_with_index.reset_index()  # brings index 'cluster' as column
+
+    # Normalize dtypes for the join key to avoid pandas merge dtype issues
+    if "cluster" in sensors_copy.columns:
+        sensors_copy["cluster"] = sensors_copy["cluster"].astype("int64")
+    if "cluster" in result_with_index.columns:
+        result_with_index["cluster"] = result_with_index["cluster"].astype("int64")
 
     # Merge by cluster
-    merged = sensors.merge(result_with_index, how="left", on="cluster")
+    merged = sensors_copy.merge(result_with_index, how="left", on="cluster")
 
     response = []
 

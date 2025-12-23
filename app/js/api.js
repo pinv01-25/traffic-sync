@@ -93,7 +93,10 @@ async function evaluateRandom() {
     }
 
     const json = await res.json();
-    showResults(json);
+    // Backend returns an OptimizationBatch object with an `optimizations` array
+    // Fall back to raw json if structure changes
+    const resultsArray = Array.isArray(json) ? json : json.optimizations || [];
+    showResults(resultsArray);
   } catch (error) {
     hideLoading();
     alert(`Error: ${error.message}`);

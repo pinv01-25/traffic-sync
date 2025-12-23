@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from modules.cluster.evaluation import hierarchical_clustering
 from modules.fuzzy.evaluation import run_test_cases
 from modules.pso.optimization import pso
-from modules.utils import consolidate_results
+from modules.utils import consolidate_results, generate_random_test_cases
 from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
@@ -243,3 +243,35 @@ async def evaluate_json(request: Request):
             status_code=400,
             detail=f"Invalid input format or data: {str(e)}",
         ) from e
+
+
+@app.post("/evaluate/{sensors}", response_model=OptimizationBatch)
+async def evaluate_random(sensors: int):
+    """
+    Evaluate randomly generated traffic data for a given number of sensors.
+
+    This endpoint mirrors the batch response format of `/evaluate`, but instead
+    of receiving sensor data in the request body, it generates synthetic test
+    cases using the same internal schema and runs them through the pipeline.
+    """
+    if sensors <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="'sensors' must be a positive integer.",
+        )
+
+    # Generate random test cases compatible with the pipeline
+    test_data = generate_random_test_cases(sensors)
+
+    # Run batch optimization pipeline
+    optimizations = run_pipeline(test_data)
+
+    # Build batch response using metadata from the first generated sensor
+    first = test_data[0]
+    return OptimizationBatch(
+        version=first["version"],
+        type="optimization",
+        timestamp=first["timestamp"],
+        traffic_light_id=first["traffic_light_id"],
+        optimizations=optimizations,
+    )
