@@ -48,4 +48,29 @@ speedups = [
     "uvloop==0.21.0",
 ]
 
+dev = [
+    "ruff>=0.6.0,<1.0.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["api", "modules"]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E203",  # espacio antes de ':' (para compatibilidad con muchos formateadores)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
 

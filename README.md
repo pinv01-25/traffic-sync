@@ -47,6 +47,20 @@ Compatibilidad con pip (opcional)
 uv export --frozen --output-file requirements.txt
 ```
 
+## Linting y formateo (Ruff)
+
+Este proyecto utiliza **Ruff** para linting y formateo del código Python.
+
+- **Ejecutar el linter sobre todo el proyecto**  
+  ```bash
+  uv run ruff check .
+  ```
+
+- **Formatear automáticamente el código**  
+  ```bash
+  uv run ruff format .
+  ```
+
 Visit: http://localhost:8002
 
 ---
