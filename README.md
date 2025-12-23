@@ -25,16 +25,26 @@ traffic-sync/
 
 ## Getting Started
 
-Install Dependencies
-
-```python
-pip install -r requirements.txt
-```
-
-Run the API Server
+Recommended install (uv)
 
 ```bash
-./run.sh
+# 1) Instala uv si no lo tienes
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2) Sincroniza dependencias en .venv/
+uv sync
+
+# 3) Arranca la API
+uv run uvicorn api.server:app --reload --port 8002
+```
+
+Compatibilidad con pip (opcional)
+
+- Puedes seguir usando `pip install -r requirements.txt`.
+- Si actualizas dependencias con uv, exporta el archivo de compatibilidad con:
+
+```bash
+uv export --frozen --output-file requirements.txt
 ```
 
 Visit: http://localhost:8002

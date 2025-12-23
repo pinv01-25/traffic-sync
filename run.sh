@@ -13,4 +13,4 @@ echo "Press Ctrl+C to stop the service gracefully"
 # Start the service with proper signal handling
 trap 'echo "Received interrupt signal, shutting down..."; exit 0' INT TERM
 
-uvicorn api.server:app --reload --port 8002
+uv run uvicorn api.server:app --reload --port 8002
