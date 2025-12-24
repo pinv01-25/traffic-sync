@@ -170,8 +170,9 @@ def root():
     return FileResponse("app/index.html")
 
 
-@app.get("/health")
-def health_check():
+@app.get("/healthcheck")
+def healthcheck():
+    """Health check endpoint"""
     return {"status": "ok", "service": "traffic-sync"}
 
 
