@@ -90,17 +90,18 @@ def _approach_congestion(green_time, vpm, speed, density):
     Surrogate normalized to the balanced split: the observed metrics were
     measured under (roughly) balanced timing, so at green = CYCLE/2 the
     model returns the observations. Less green accumulates density and
-    reduces served flow proportionally; more green does the opposite.
+    reduces speed; more green does the opposite. The vehicle demand (vpm)
+    is exogenous and does NOT scale with green: hacerlo enseñaba al PSO a
+    matar el verde (servir a nadie => el sensor no ve a nadie => "libre").
     Inputs are clipped to the fuzzy universes.
     """
     half_cycle = CYCLE_TIME / 2.0
     red_time = CYCLE_TIME - green_time
 
-    adjusted_vpm = vpm * (green_time / half_cycle)
     adjusted_speed = speed * (1 + 0.01 * (green_time - half_cycle))
     adjusted_density = density * (red_time / half_cycle)
 
-    simulator.input["vehicles"] = min(adjusted_vpm, float(max(VEHICLE_RANGE)))
+    simulator.input["vehicles"] = min(vpm, float(max(VEHICLE_RANGE)))
     simulator.input["speed"] = min(max(adjusted_speed, 0.0), float(max(SPEED_RANGE)))
     simulator.input["density"] = min(adjusted_density, float(max(DENSITY_RANGE)))
     simulator.compute()
