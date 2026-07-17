@@ -21,10 +21,10 @@ from modules.pso.fitness import CYCLE_TIME, T_MAX, T_MIN, calculate_green_time, 
 # --------------------------------------------------
 
 #: Number of particles in the swarm.
-PARTICLES = 30
+PARTICLES = 12
 
 #: Maximum number of iterations for PSO.
-MAX_ITER = 100
+MAX_ITER = 40
 
 #: Inertia weight (controls the impact of previous velocity on the current one).
 W = 0.8
@@ -41,7 +41,7 @@ C2 = 1.5
 # --------------------------------------------------
 
 #: Number of iterations allowed without improvement before early stopping.
-PATIENCE = 10
+PATIENCE = 5
 
 #: Minimum required improvement between iterations to avoid triggering early stopping.
 IMPROVEMENT_THRESHOLD = 1e-3
@@ -49,6 +49,9 @@ IMPROVEMENT_THRESHOLD = 1e-3
 # --------------------------------------------------
 # PSO Optimization
 # --------------------------------------------------
+
+#: Cache de resultados por stats de cluster redondeados (proceso-vida).
+_PSO_CACHE = {}
 
 
 def pso(clusters_df):
@@ -86,6 +89,19 @@ def pso(clusters_df):
     for cluster in clusters_df["Cluster"].unique():
         # Extract representative row for the cluster
         cluster_data = clusters_df[clusters_df["Cluster"] == cluster].iloc[0]
+
+        # Memoización: pso es determinista respecto de los stats del cluster y
+        # el tráfico real produce inputs casi idénticos entre llamadas seguidas;
+        # sin cache cada /evaluate paga el PSO completo (~segundos) de nuevo.
+        cache_key = (
+            round(float(cluster_data["VPM Mean"]), 1),
+            round(float(cluster_data["Speed Mean"]), 1),
+            round(float(cluster_data["Density Mean"]), 1),
+        )
+        cached = _PSO_CACHE.get(cache_key)
+        if cached is not None:
+            results[cluster] = cached
+            continue
 
         # Initialize particles around base green time estimate
         base_green = calculate_green_time(cluster_data)
@@ -154,7 +170,7 @@ def pso(clusters_df):
         green_time = float(global_best[0])
 
         # Store results for the cluster
-        results[cluster] = {
+        results[cluster] = _PSO_CACHE[cache_key] = {
             "Green": green_time,
             "Red": CYCLE_TIME - green_time,
             "Cycle": CYCLE_TIME,
