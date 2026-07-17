@@ -11,7 +11,7 @@ Functions:
 
 import pandas as pd
 import skfuzzy as fuzz
-from modules.fuzzy.system import DENSITY_RANGE, congestion, simulator
+from modules.fuzzy.system import congestion, simulator
 
 # --------------------------------------------------
 # Evaluation functions
@@ -122,11 +122,12 @@ def run_test_cases(json_data):
         vpm = metrics["vehicles_per_minute"]
         spd = metrics["avg_speed_kmh"]
         den = metrics["density"]
-        # traffic-control normaliza densidad a 0-1, pero el universo fuzzy es
-        # veh/km (0-150): sin reescalar, la densidad siempre cae en 'low' y el
-        # sistema pierde su señal principal. Valores >1 ya vienen en veh/km.
+        # traffic-control normaliza densidad con 100 veh/km = 1.0 (clip en 1);
+        # el universo fuzzy es veh/km (0-150). Sin des-normalizar, la densidad
+        # siempre cae en 'low' y el sistema pierde su señal principal.
+        # Valores >1 ya vienen en veh/km.
         if den <= 1.0:
-            den *= float(max(DENSITY_RANGE))
+            den *= 100.0
         cir = metrics["avg_circulation_time_sec"]
 
         vehicle_stats = test["vehicle_stats"]
