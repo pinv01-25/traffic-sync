@@ -15,11 +15,11 @@ import numpy as np
 import pandas as pd
 from modules.fuzzy.evaluation import get_congestion_category
 from modules.pso.fitness import (
-    CYCLE_TIME,
-    T_MAX,
-    T_MIN,
-    _approach_congestion,
-    calculate_green_time,
+    C_MAX,
+    C_MIN,
+    YELLOW_TOTAL,
+    _cycle_congestion,
+    calculate_base_cycle,
     fitness_function,
 )
 
@@ -110,10 +110,11 @@ def pso(clusters_df):
             results[cluster] = cached
             continue
 
-        # Initialize particles around base green time estimate
-        base_green = calculate_green_time(cluster_data)
-        particles = np.random.normal(loc=base_green, scale=5.0, size=(PARTICLES, 1))
-        particles = np.clip(particles, T_MIN, T_MAX)
+        # Initialize particles around base cycle-length estimate
+        base_cycle = calculate_base_cycle(cluster_data)
+        particles = np.clip(
+            np.random.normal(loc=base_cycle, scale=10.0, size=(PARTICLES, 1)), C_MIN, C_MAX
+        )
         velocities = np.zeros_like(particles)
         best_positions = particles.copy()
 
@@ -141,7 +142,7 @@ def pso(clusters_df):
                     + C1 * r1 * (best_positions[i] - particles[i])
                     + C2 * r2 * (global_best - particles[i])
                 )
-                particles[i] = np.clip(particles[i] + velocities[i], T_MIN, T_MAX)
+                particles[i] = np.clip(particles[i] + velocities[i], C_MIN, C_MAX)
             # Re-evaluate fitness after updates
             scores = np.array([fitness_function(p, cluster_data) for p in particles])
 
@@ -166,38 +167,41 @@ def pso(clusters_df):
                 if best_scores[global_best_idx] > 5:
                     restart_idx = np.random.choice(PARTICLES, size=PARTICLES // 5, replace=False)
                     for idx in restart_idx:
-                        particles[idx] = np.random.normal(loc=base_green, scale=10.0)
-                        particles[idx] = np.clip(particles[idx], T_MIN, T_MAX)
+                        particles[idx] = np.random.normal(loc=base_cycle, scale=10.0)
+                        particles[idx] = np.clip(particles[idx], C_MIN, C_MAX)
                         velocities[idx] = 0
                     no_improvement = 0
                 else:
                     break
 
-        # Extract optimal green time from best global position
-        green_time = float(global_best[0])
+        # Extract optimal cycle length from best global position
+        cycle = float(global_best[0])
+        useful = cycle - YELLOW_TOTAL
+        green = useful / 2.0
 
-        # Congestión de la aproximación servida en el óptimo: comparable con
-        # original_congestion (un solo lado, 0-10). El fitness NO lo es: suma
-        # dos lados (0-20) y comparar contra él vetaba toda optimización.
-        served_congestion = _approach_congestion(
-            green_time,
+        # Congestión servida en el óptimo, sin el término de espera: comparable
+        # con original_congestion (un solo lado, 0-10). El fitness NO lo es:
+        # incluye la penalización de espera y comparar contra él vetaba toda
+        # optimización.
+        served_congestion = _cycle_congestion(
+            cycle,
             cluster_data["VPM Mean"],
             cluster_data["Speed Mean"],
             cluster_data["Density Mean"],
+            include_wait=False,
         )
 
         # Store results for the cluster
         results[cluster] = _PSO_CACHE[cache_key] = {
-            "Green": green_time,
-            "Red": CYCLE_TIME - green_time,
-            "Cycle": CYCLE_TIME,
-            "Base Green": base_green,
+            "Green": green,
+            "Red": green,
+            "Cycle": cycle,
+            "Base Green": base_cycle,
             "Optimized Congestion": float(served_congestion),
             "Optimized Category": get_congestion_category(float(best_scores[global_best_idx])),
             "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",  # noqa: E501
-            "Optimized VPM": cluster_data["VPM Mean"] * (green_time / CYCLE_TIME),
-            "Optimized Speed": cluster_data["Speed Mean"] * (1 + 0.01 * (green_time - T_MIN)),
-            "Optimized Density": cluster_data["Density Mean"]
-            * ((CYCLE_TIME - green_time) / CYCLE_TIME),
+            "Optimized VPM": cluster_data["VPM Mean"] * (green / cycle),
+            "Optimized Speed": cluster_data["Speed Mean"] * (1 + 0.01 * (green - C_MIN / 2)),
+            "Optimized Density": cluster_data["Density Mean"] * (green / cycle),
         }
     return pd.DataFrame(results).T

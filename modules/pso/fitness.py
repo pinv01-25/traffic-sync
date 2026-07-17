@@ -1,18 +1,15 @@
 """
-Green time estimation and PSO fitness evaluation for traffic optimization.
+Cycle-length estimation and PSO fitness evaluation for traffic optimization.
 
-This module implements the academic formula for estimating initial green times,
-as well as a fitness function used in Particle Swarm Optimization (PSO) to minimize
-congestion levels predicted by a fuzzy inference system.
-
-The fitness is two-sided: an intersection shares its cycle between the served
-(congested) approach and the cross traffic, so the objective is the sum of the
-fuzzy congestion of both sides. A one-sided objective has no trade-off and PSO
-degenerates to the upper bound (always max green), which starves cross streets.
+Under hierarchical control, traffic-sim splits green time locally per approach
+by queue length; this service only decides the CYCLE LENGTH per cluster. The
+fitness function is 1-D: it evaluates the fuzzy congestion the crossing would
+serve at a given cycle length, penalizing long cycles (longer average wait)
+so PSO does not degenerate to the upper bound.
 
 Functions:
-    - calculate_green_time: Compute initial green time using academic weights.
-    - fitness_function: Two-sided congestion objective for a PSO particle.
+    - calculate_base_cycle: Compute the initial cycle-length seed for PSO.
+    - fitness_function: Cycle-length congestion objective for a PSO particle.
 """
 
 from modules.fuzzy.system import DENSITY_RANGE, SPEED_RANGE, VEHICLE_RANGE, simulator
@@ -21,61 +18,30 @@ from modules.fuzzy.system import DENSITY_RANGE, SPEED_RANGE, VEHICLE_RANGE, simu
 # Optimization Parameters
 # --------------------------------------------------
 
-#: Weight for density term in green time formula.
+#: Weight for density term in the base cycle formula.
 ALPHA = 0.4
 
-#: Weight for speed term in green time formula.
+#: Weight for speed term in the base cycle formula.
 BETA = 0.4
 
-#: Weight for VPM (vehicles per minute) term in green time formula.
+#: Weight for VPM (vehicles per minute) term in the base cycle formula.
 GAMMA = 0.2
 
-#: Minimum allowable green time (in seconds).
-T_MIN = 10
+#: Minimum allowable cycle length (in seconds).
+C_MIN = 60
 
-#: Default cycle time for traffic signals (in seconds).
-CYCLE_TIME = 90
+#: Maximum allowable cycle length (in seconds).
+C_MAX = 120
 
-#: Maximum allowable green time: the cross approach keeps at least T_MIN.
-T_MAX = CYCLE_TIME - T_MIN
+#: Reference cycle length: the observed metrics were measured under this
+#: cycle, so the surrogate returns them unmodified at C = C_REF.
+C_REF = 90
 
-#: Assumed demand of the cross approach relative to the served one. The
-#: pipeline optimizes the approach where a bottleneck was DETECTED, so by
-#: construction the cross street is at most as loaded as the served one.
-CROSS_DEMAND_RATIO = 0.5
+#: Total time lost to yellow/all-red clearance per cycle (in seconds).
+YELLOW_TOTAL = 6
 
-
-# --------------------------------------------------
-# Green Time Calculation
-# --------------------------------------------------
-def calculate_green_time(cluster_data):
-    """
-    Compute initial green time using the academic formula.
-
-    Applies a weighted sum of normalized traffic parameters (density, speed, VPM)
-    scaled to the feasible green range [T_MIN, T_MAX]. The weighted sum lies in
-    [0, ALPHA+BETA+GAMMA] = [0, 1]; without the scaling the formula could only
-    ever add one second to T_MIN.
-
-    Args:
-        cluster_data (pd.Series): Row of cluster-level statistics with the following fields:
-            - 'Density Mean': Mean vehicle density in veh/km.
-            - 'Speed Mean': Mean traffic speed in km/h.
-            - 'VPM Mean': Mean vehicles per minute.
-
-    Returns:
-        float: Estimated green time (in seconds), in [T_MIN, T_MAX].
-    """
-    D = cluster_data["Density Mean"]
-    V = cluster_data["Speed Mean"]
-    VPM = cluster_data["VPM Mean"]
-
-    # Weighted components of the green time formula (each in [0, weight])
-    term1 = ALPHA * min(D / max(DENSITY_RANGE), 1.0)
-    term2 = BETA * (1 - min(V / max(SPEED_RANGE), 1.0))
-    term3 = GAMMA * min(VPM / max(VEHICLE_RANGE), 1.0)
-
-    return T_MIN + (T_MAX - T_MIN) * (term1 + term2 + term3)
+#: Weight of the average-wait penalty added to the fuzzy congestion.
+WAIT_WEIGHT = 2.0
 
 
 # --------------------------------------------------
@@ -83,63 +49,47 @@ def calculate_green_time(cluster_data):
 # --------------------------------------------------
 
 
-def _approach_congestion(green_time, vpm, speed, density):
-    """
-    Fuzzy congestion of one approach given its green time within the cycle.
+def _cycle_congestion(cycle, vpm, speed, density, include_wait=True):
+    """Congestión surrogate del cruce dado el largo de ciclo.
 
-    Surrogate normalized to the balanced split: the observed metrics were
-    measured under (roughly) balanced timing, so at green = CYCLE/2 the
-    model returns the observations. Less green accumulates density and
-    reduces speed; more green does the opposite. The vehicle demand (vpm)
-    is exogenous and does NOT scale with green: hacerlo enseñaba al PSO a
-    matar el verde (servir a nadie => el sensor no ve a nadie => "libre").
-    Inputs are clipped to the fuzzy universes.
+    cf = fracción de ciclo útil (crece con C: menos pérdida por amarillos).
+    Normalizado a C_REF: en C=C_REF devuelve las métricas observadas.
+    El término de espera penaliza ciclos largos (rojo medio más largo).
     """
-    half_cycle = CYCLE_TIME / 2.0
-    red_time = CYCLE_TIME - green_time
-
-    adjusted_speed = speed * (1 + 0.01 * (green_time - half_cycle))
-    adjusted_density = density * (red_time / half_cycle)
+    cf = (cycle - YELLOW_TOTAL) / cycle
+    cf_ref = (C_REF - YELLOW_TOTAL) / C_REF
+    density_adj = density * cf_ref / cf
+    speed_adj = speed * cf / cf_ref
 
     simulator.input["vehicles"] = min(vpm, float(max(VEHICLE_RANGE)))
-    simulator.input["speed"] = min(max(adjusted_speed, 0.0), float(max(SPEED_RANGE)))
-    simulator.input["density"] = min(adjusted_density, float(max(DENSITY_RANGE)))
+    simulator.input["speed"] = min(max(speed_adj, 0.0), float(max(SPEED_RANGE)))
+    simulator.input["density"] = min(density_adj, float(max(DENSITY_RANGE)))
     simulator.compute()
+    congestion = simulator.output["congestion"]
 
-    return simulator.output["congestion"]
+    if include_wait:
+        congestion += WAIT_WEIGHT * (cycle - C_MIN) / (C_MAX - C_MIN)
+    return congestion
 
 
 def fitness_function(particle, cluster_data):
-    """
-    Evaluate total intersection congestion for a given green time split.
-
-    Two-sided objective: the served (detected bottleneck) approach receives
-    `green_time` and the cross approach receives the remainder of the cycle.
-    Cross demand is modeled as CROSS_DEMAND_RATIO of the served one (the
-    detection pipeline guarantees the served side is the most loaded).
-
-    Args:
-        particle (np.ndarray): PSO particle containing a green time value.
-        cluster_data (pd.Series): Row of cluster-level statistics with the following fields:
-            - 'Density Mean'
-            - 'Speed Mean'
-            - 'VPM Mean'
-
-    Returns:
-        float: Sum of fuzzy congestion of both approaches (the lower, the better).
-    """
-    green_time = float(particle[0])
-
-    vpm = cluster_data["VPM Mean"]
-    speed = cluster_data["Speed Mean"]
-    density = cluster_data["Density Mean"]
-
-    served = _approach_congestion(green_time, vpm, speed, density)
-    cross = _approach_congestion(
-        CYCLE_TIME - green_time,
-        vpm * CROSS_DEMAND_RATIO,
-        speed,  # velocidad libre similar; la congestión la aportan flujo y densidad
-        density * CROSS_DEMAND_RATIO,
+    """Objetivo 1-D del PSO: congestión total en función del largo de ciclo."""
+    cycle = float(particle[0])
+    return _cycle_congestion(
+        cycle,
+        cluster_data["VPM Mean"],
+        cluster_data["Speed Mean"],
+        cluster_data["Density Mean"],
     )
 
-    return served + cross
+
+def calculate_base_cycle(cluster_data):
+    """Semilla del PSO: ciclo inicial según la fórmula académica re-escalada."""
+    D = cluster_data["Density Mean"]
+    V = cluster_data["Speed Mean"]
+    VPM = cluster_data["VPM Mean"]
+    term1 = ALPHA * min(D / max(DENSITY_RANGE), 1.0)
+    term2 = BETA * (1 - min(V / max(SPEED_RANGE), 1.0))
+    term3 = GAMMA * min(VPM / max(VEHICLE_RANGE), 1.0)
+    load = term1 + term2 + term3          # ∈ [0, 1]
+    return min(max(C_REF + (load - 0.5) * 60.0, C_MIN), C_MAX)
