@@ -14,7 +14,14 @@ Functions:
 import numpy as np
 import pandas as pd
 from modules.fuzzy.evaluation import get_congestion_category
-from modules.pso.fitness import CYCLE_TIME, T_MAX, T_MIN, calculate_green_time, fitness_function
+from modules.pso.fitness import (
+    CYCLE_TIME,
+    T_MAX,
+    T_MIN,
+    _approach_congestion,
+    calculate_green_time,
+    fitness_function,
+)
 
 # --------------------------------------------------
 # PSO Configuration Parameters
@@ -169,13 +176,23 @@ def pso(clusters_df):
         # Extract optimal green time from best global position
         green_time = float(global_best[0])
 
+        # Congestión de la aproximación servida en el óptimo: comparable con
+        # original_congestion (un solo lado, 0-10). El fitness NO lo es: suma
+        # dos lados (0-20) y comparar contra él vetaba toda optimización.
+        served_congestion = _approach_congestion(
+            green_time,
+            cluster_data["VPM Mean"],
+            cluster_data["Speed Mean"],
+            cluster_data["Density Mean"],
+        )
+
         # Store results for the cluster
         results[cluster] = _PSO_CACHE[cache_key] = {
             "Green": green_time,
             "Red": CYCLE_TIME - green_time,
             "Cycle": CYCLE_TIME,
             "Base Green": base_green,
-            "Optimized Congestion": float(best_scores[global_best_idx]),
+            "Optimized Congestion": float(served_congestion),
             "Optimized Category": get_congestion_category(float(best_scores[global_best_idx])),
             "Improvement": f"{(cluster_data['Congestion Mean'] - best_scores[global_best_idx]) * 10:.2f}%",  # noqa: E501
             "Optimized VPM": cluster_data["VPM Mean"] * (green_time / CYCLE_TIME),
