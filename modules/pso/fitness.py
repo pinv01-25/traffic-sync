@@ -49,6 +49,14 @@ WAIT_WEIGHT = 2.0
 # --------------------------------------------------
 
 
+def _load(vpm, speed, density):
+    """Carga normalizada del cruce en [0,1] (fórmula académica de pesos)."""
+    term1 = ALPHA * min(density / max(DENSITY_RANGE), 1.0)
+    term2 = BETA * (1 - min(speed / max(SPEED_RANGE), 1.0))
+    term3 = GAMMA * min(vpm / max(VEHICLE_RANGE), 1.0)
+    return term1 + term2 + term3
+
+
 def _cycle_congestion(cycle, vpm, speed, density, include_wait=True):
     """Congestión surrogate del cruce dado el largo de ciclo.
 
@@ -68,7 +76,10 @@ def _cycle_congestion(cycle, vpm, speed, density, include_wait=True):
     congestion = simulator.output["congestion"]
 
     if include_wait:
-        congestion += WAIT_WEIGHT * (cycle - C_MIN) / (C_MAX - C_MIN)
+        load = _load(vpm, speed, density)
+        wait_cost = (1.0 - load) * (cycle - C_MIN) / (C_MAX - C_MIN)
+        capacity_cost = load * (YELLOW_TOTAL / cycle) / (YELLOW_TOTAL / C_MIN)
+        congestion += WAIT_WEIGHT * (wait_cost + capacity_cost)
     return congestion
 
 
@@ -88,8 +99,5 @@ def calculate_base_cycle(cluster_data):
     D = cluster_data["Density Mean"]
     V = cluster_data["Speed Mean"]
     VPM = cluster_data["VPM Mean"]
-    term1 = ALPHA * min(D / max(DENSITY_RANGE), 1.0)
-    term2 = BETA * (1 - min(V / max(SPEED_RANGE), 1.0))
-    term3 = GAMMA * min(VPM / max(VEHICLE_RANGE), 1.0)
-    load = term1 + term2 + term3          # ∈ [0, 1]
+    load = _load(VPM, V, D)          # ∈ [0, 1]
     return min(max(C_REF + (load - 0.5) * 60.0, C_MIN), C_MAX)
