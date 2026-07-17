@@ -19,7 +19,7 @@ def generate_random_test_cases(n_cases: int) -> list:
 
     for i in range(n_cases):
         case = {
-            "version": "1.0",
+            "version": "2.0",
             "type": "data",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "traffic_light_id": f"TL-{1000 + i}",
@@ -28,7 +28,7 @@ def generate_random_test_cases(n_cases: int) -> list:
                 "vehicles_per_minute": int(random.choice(VEHICLE_RANGE)),
                 "avg_speed_kmh": float(random.choice(SPEED_RANGE)),
                 "avg_circulation_time_sec": round(random.uniform(20.0, 60.0), 1),
-                "density": float(random.choice(DENSITY_RANGE)) / 10.0,  # simulate decimal densities
+                "density": round(random.uniform(0, max(DENSITY_RANGE)), 1),  # veh/km, cubre todo el universo difuso [0-150]
             },
             "vehicle_stats": {
                 "motorcycle": random.randint(0, 5),

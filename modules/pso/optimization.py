@@ -13,9 +13,8 @@ Functions:
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 from modules.fuzzy.evaluation import get_congestion_category
-from modules.pso.fitness import CYCLE_TIME, T_MIN, calculate_green_time, fitness_function
+from modules.pso.fitness import CYCLE_TIME, T_MAX, T_MIN, calculate_green_time, fitness_function
 
 # --------------------------------------------------
 # PSO Configuration Parameters
@@ -91,14 +90,15 @@ def pso(clusters_df):
         # Initialize particles around base green time estimate
         base_green = calculate_green_time(cluster_data)
         particles = np.random.normal(loc=base_green, scale=5.0, size=(PARTICLES, 1))
-        particles = np.clip(particles, T_MIN, CYCLE_TIME - 20)
+        particles = np.clip(particles, T_MIN, T_MAX)
         velocities = np.zeros_like(particles)
         best_positions = particles.copy()
 
-        # Evaluate fitness of initial particles in parallel
-        best_scores = np.array(
-            Parallel(n_jobs=-1)(delayed(fitness_function)(p, cluster_data) for p in particles)
-        )
+        # Evaluate fitness of initial particles
+        # ponytail: evaluación serial; cada fitness es ~1 ms de skfuzzy y el pool de
+        # procesos de joblib costaba más que el trabajo. Reintroducir paralelismo solo
+        # si la función de aptitud se vuelve cara (p. ej. simulación embebida).
+        best_scores = np.array([fitness_function(p, cluster_data) for p in particles])
 
         # Determine global best solution
         global_best_idx = np.argmin(best_scores)
@@ -118,11 +118,9 @@ def pso(clusters_df):
                     + C1 * r1 * (best_positions[i] - particles[i])
                     + C2 * r2 * (global_best - particles[i])
                 )
-                particles[i] = np.clip(particles[i] + velocities[i], T_MIN, CYCLE_TIME - 20)
+                particles[i] = np.clip(particles[i] + velocities[i], T_MIN, T_MAX)
             # Re-evaluate fitness after updates
-            scores = np.array(
-                Parallel(n_jobs=-1)(delayed(fitness_function)(p, cluster_data) for p in particles)
-            )
+            scores = np.array([fitness_function(p, cluster_data) for p in particles])
 
             for i in range(PARTICLES):
                 current_score = scores[i]
@@ -146,7 +144,7 @@ def pso(clusters_df):
                     restart_idx = np.random.choice(PARTICLES, size=PARTICLES // 5, replace=False)
                     for idx in restart_idx:
                         particles[idx] = np.random.normal(loc=base_green, scale=10.0)
-                        particles[idx] = np.clip(particles[idx], T_MIN, CYCLE_TIME - 20)
+                        particles[idx] = np.clip(particles[idx], T_MIN, T_MAX)
                         velocities[idx] = 0
                     no_improvement = 0
                 else:

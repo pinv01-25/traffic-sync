@@ -98,33 +98,8 @@ def run_pipeline(traffic_data: List[dict]):
     # Apply clustering to group sensors by congestion similarity
     clusters, sensors = hierarchical_clustering(fuzzy)
 
-    # TEMPORARY DEBUG LOGGING - CLUSTER DATA STRUCTURE
-    logger.info("=== CLUSTER DATA DEBUG ===")
-    logger.info(f"Clusters DataFrame shape: {clusters.shape}")
-    logger.info(f"Clusters DataFrame columns: {list(clusters.columns)}")
-    logger.info(f"Clusters DataFrame index: {list(clusters.index)}")
-    logger.info(
-        f"First cluster data: {clusters.iloc[0].to_dict() if len(clusters) > 0 else 'No clusters'}"
-    )
-    logger.info(f"Sensors DataFrame shape: {sensors.shape}")
-    logger.info(f"Sensors DataFrame columns: {list(sensors.columns)}")
-    logger.info(
-        f"First sensor data: {sensors.iloc[0].to_dict() if len(sensors) > 0 else 'No sensors'}"
-    )
-    logger.info("=== END CLUSTER DATA DEBUG ===")
-
     # Run PSO optimization on each cluster
     result = pso(clusters)
-
-    # TEMPORARY DEBUG LOGGING - PSO RESULT STRUCTURE
-    logger.info("=== PSO RESULT DEBUG ===")
-    logger.info(f"PSO result DataFrame shape: {result.shape}")
-    logger.info(f"PSO result DataFrame columns: {list(result.columns)}")
-    logger.info(f"PSO result DataFrame index: {list(result.index)}")
-    logger.info(
-        f"First PSO result: {result.iloc[0].to_dict() if len(result) > 0 else 'No results'}"
-    )
-    logger.info("=== END PSO RESULT DEBUG ===")
 
     # Get original timestamp for response
     original_timestamp = traffic_data[0]["timestamp"] if traffic_data else None
@@ -187,20 +162,6 @@ async def evaluate_json(request: Request):
     try:
         body = await request.json()
 
-        # TEMPORARY DEBUG LOGGING
-        logger.info("=== SYNC SERVICE DEBUG ===")
-        logger.info(f"Received request body: {body}")
-        logger.info(f"Request body type: {type(body)}")
-        logger.info(
-            f"Request body keys: {list(body.keys()) if isinstance(body, dict) else 'Not a dict'}"
-        )
-        if isinstance(body, dict) and "sensors" in body:
-            logger.info(f"Number of sensors: {len(body['sensors'])}")
-            logger.info(
-                f"First sensor keys: {list(body['sensors'][0].keys()) if body['sensors'] else 'No sensors'}"  # noqa: E501
-            )
-        logger.info("=== END DEBUG ===")
-
         # Validate batch format
         batch_data = DataBatch(**body)
 
@@ -231,15 +192,7 @@ async def evaluate_json(request: Request):
         )
 
     except Exception as e:
-        # TEMPORARY DEBUG LOGGING
-        logger.error("=== SYNC SERVICE ERROR DEBUG ===")
-        logger.error(f"Exception type: {type(e)}")
-        logger.error(f"Exception message: {str(e)}")
-        logger.error(f"Exception details: {e}")
-        if hasattr(e, "errors"):
-            logger.error(f"Validation errors: {e.errors()}")
-        logger.error("=== END ERROR DEBUG ===")
-
+        logger.error(f"Failed to process /evaluate request: {e}")
         raise HTTPException(
             status_code=400,
             detail=f"Invalid input format or data: {str(e)}",
