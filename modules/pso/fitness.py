@@ -43,6 +43,26 @@ YELLOW_TOTAL = 6
 #: Weight of the average-wait penalty added to the fuzzy congestion.
 WAIT_WEIGHT = 2.0
 
+#: Umbrales de gridlock: densidad alta Y velocidad casi nula a la vez. Un
+#: cruce "ocupado pero fluyendo" (densidad alta, velocidad moderada) no es
+#: lo mismo que un atasco real (nadie se mueve) — la fórmula de carga
+#: original mezcla ambos en un único término y empuja a ciclos LARGOS en
+#: los dos casos por igual. Bajo un atasco de verdad, un ciclo largo
+#: empeora las cosas: alimenta más vehículos por verde hacia un corredor
+#: que ya no puede drenarlos (deadlock de corredor observado en
+#: demanda_alta/demanda_saturada con Max-Pressure). Distinguir el caso y
+#: recortar el ciclo ahí es lo que le da a esta capa un rol real de
+#: anti-gridlock, no solo de ajuste de throughput en régimen fluido.
+GRIDLOCK_DENSITY_THRESHOLD = 0.6   # fracción de DENSITY_RANGE
+GRIDLOCK_SPEED_THRESHOLD = 0.05    # fracción de SPEED_RANGE
+
+
+def is_gridlocked(vpm, speed, density):
+    """True si el patrón es 'nadie se mueve', no solo 'mucha demanda'."""
+    density_frac = min(density / max(DENSITY_RANGE), 1.0)
+    speed_frac = min(speed / max(SPEED_RANGE), 1.0)
+    return density_frac >= GRIDLOCK_DENSITY_THRESHOLD and speed_frac <= GRIDLOCK_SPEED_THRESHOLD
+
 
 # --------------------------------------------------
 # Fitness Evaluation
@@ -86,12 +106,16 @@ def _cycle_congestion(cycle, vpm, speed, density, include_wait=True):
 def fitness_function(particle, cluster_data):
     """Objetivo 1-D del PSO: congestión total en función del largo de ciclo."""
     cycle = float(particle[0])
-    return _cycle_congestion(
-        cycle,
-        cluster_data["VPM Mean"],
-        cluster_data["Speed Mean"],
-        cluster_data["Density Mean"],
-    )
+    vpm = cluster_data["VPM Mean"]
+    speed = cluster_data["Speed Mean"]
+    density = cluster_data["Density Mean"]
+    congestion = _cycle_congestion(cycle, vpm, speed, density)
+    if is_gridlocked(vpm, speed, density):
+        # Bajo atasco real, un ciclo largo alimenta más vehículos por verde
+        # hacia un corredor que no drena: penalizar el largo de ciclo en
+        # vez de recompensarlo invierte el sesgo de _cycle_congestion.
+        congestion += WAIT_WEIGHT * (cycle - C_MIN) / (C_MAX - C_MIN)
+    return congestion
 
 
 def calculate_base_cycle(cluster_data):
@@ -99,5 +123,7 @@ def calculate_base_cycle(cluster_data):
     D = cluster_data["Density Mean"]
     V = cluster_data["Speed Mean"]
     VPM = cluster_data["VPM Mean"]
+    if is_gridlocked(VPM, V, D):
+        return C_MIN
     load = _load(VPM, V, D)          # ∈ [0, 1]
     return min(max(C_REF + (load - 0.5) * 60.0, C_MIN), C_MAX)
